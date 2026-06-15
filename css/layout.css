@@ -1,0 +1,52 @@
+#main-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  flex: 1;
+  overflow: hidden;
+}
+
+#sidebar-left,
+#sidebar-right {
+  background: #0b1220;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+#center-panel {
+  background: #0a0f1c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.panel {
+  background: #111827;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #1f2937;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px;
+  width: 100%;
+  margin-top: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:disabled {
+  background: #60a5fa;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button:hover {
+  background: #1d4ed8;
+}

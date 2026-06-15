@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Election Simulator</title>
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/ev.css">
+  <link rel="stylesheet" href="css/map.css">
+  <link rel="stylesheet" href="css/candidate-select.css">
+  <link rel="stylesheet" href="css/election-night.css">
+  <link rel="stylesheet" href="css/action-panel.css">
+  <link rel="stylesheet" href="css/choice-modal.css">
+  <link rel="stylesheet" href="css/vp-pick.css">
+  <link rel="stylesheet" href="css/journal-archetype.css">
+</head>
+
+<body>
+  <div id="candidate-select-overlay"></div>
+  <div id="app">
+
+    <header id="top-bar">
+      <div class="title">180 Days to Win</div>
+      <div id="date-display">Day 1 / 180</div>
+    </header>
+
+    <div id="main-layout">
+
+      <aside id="sidebar-left">
+        <div id="candidate-panel"></div>
+        <div id="resources-panel"></div>
+        <div id="action-panel"></div>
+      </aside>
+
+      <main id="center-panel">
+        <div id="ev-container">
+          <div id="ev-bar-wrapper">
+            <div id="ev-bar"></div>
+            <div id="ev-win-marker">
+              &nbsp;270
+            </div>
+          </div>
+          <div id="ev-label"></div>
+        </div>
+        <div id="map-container">
+          <div class="placeholder">
+            U.S. Electoral Map Loading...
+          </div>
+          <div id="state-panel"></div>
+        </div>
+      </main>
+
+      <aside id="sidebar-right">
+        <div id="polling-panel"></div>
+        <div id="battleground-panel"></div>
+        <div id="news-panel"></div>
+      </aside>
+
+    </div>
+
+    <footer id="bottom-bar">
+      180 Days to Win v1.0
+    </footer>
+
+  </div>
+
+<script src="js/namespace.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/data/constants.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/data/states.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/data/issues.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/data/responses.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/game/Random.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/models/Candidate.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/models/State.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/models/Coalition.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/models/Policy.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/models/CampaignAction.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/models/Poll.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/models/StatePoll.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/game/Game.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/game/StateSupportEngine.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/game/PollingEngine.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/game/SuperPAC.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/ai/OpponentAI.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/game/DebateSystem.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/game/EventEngine.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/game/GameState.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/game/TimeSystem.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/ui/MapRenderer.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/ui/CandidateSelect.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/ui/ElectionNight.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/ui/ActionPanel.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/ui/ChoiceModal.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/ui/VPPick.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+<script src="js/ui/CampaignJournal.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+
+<script src="js/main.js" onerror="alert(`Failed to load ${this.src}`)"></script>
+</body>
+</html>

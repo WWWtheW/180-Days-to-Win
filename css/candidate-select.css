@@ -1,0 +1,543 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* =============================================
+   OVERLAY SHELL
+   ============================================= */
+
+#candidate-select-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #060c18;
+  overflow-y: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #d4c9b0;
+  transition: opacity 0.4s ease;
+}
+
+.cs-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 52px 28px 96px;
+  animation: cs-enter 0.5s ease forwards;
+}
+
+@keyframes cs-enter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =============================================
+   HEADER
+   ============================================= */
+
+.cs-header {
+  text-align: center;
+  margin-bottom: 56px;
+  padding-bottom: 40px;
+  position: relative;
+}
+
+.cs-flag-stripe {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #8b1a1a 0%,
+    #c0392b 35%,
+    transparent 50%,
+    #1a2d6d 65%,
+    #2c4fa3 100%
+  );
+  margin-bottom: 36px;
+}
+
+.cs-stars-row {
+  font-size: 11px;
+  letter-spacing: 10px;
+  color: #c9a84c;
+  margin-bottom: 22px;
+  user-select: none;
+}
+
+.cs-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 46px;
+  font-weight: 900;
+  color: #ede2cc;
+  margin: 0 0 14px;
+  letter-spacing: 4px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cs-tagline {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #3a5070;
+  text-transform: uppercase;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #131f35;
+}
+
+
+/* =============================================
+   SECTION STRUCTURE
+   ============================================= */
+
+.cs-section {
+  margin-bottom: 48px;
+}
+
+.cs-section-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #c9a84c;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #131f35;
+}
+
+
+/* =============================================
+   SECTION 1 — IDENTITY
+   ============================================= */
+
+.cs-identity-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.cs-field-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #3a5070;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.cs-input {
+  width: 100%;
+  background: #0d1528;
+  border: 1px solid #1e2d4a;
+  color: #d4c9b0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px;
+  padding: 13px 14px;
+  outline: none;
+  border-radius: 2px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.cs-input:focus {
+  border-color: #c9a84c;
+}
+
+.cs-input::placeholder {
+  color: #243347;
+}
+
+.cs-party-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cs-party-btn {
+  background: #0d1528;
+  border: 1px solid #1e2d4a;
+  color: #3a5070;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 13px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.cs-party-btn:hover {
+  border-color: #2d4060;
+  color: #6a8ab0;
+}
+
+.cs-party-btn.active-dem {
+  background: #071430;
+  border-color: #2c4fa3;
+  color: #6090e8;
+}
+
+.cs-party-btn.active-rep {
+  background: #180808;
+  border-color: #8b1a1a;
+  color: #d05555;
+}
+
+
+/* =============================================
+   SECTION 2 — ARCHETYPES
+   ============================================= */
+
+.cs-archetypes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.cs-archetype-card {
+  background: #0b1223;
+  border: 1px solid #1a2a42;
+  border-radius: 2px;
+  padding: 18px 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.cs-archetype-card:hover {
+  border-color: #2a3e5e;
+  background: #0d1628;
+}
+
+.cs-archetype-card.selected {
+  border-color: #c9a84c;
+  background: #0f1a2e;
+}
+
+.cs-archetype-card.selected::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: #c9a84c;
+}
+
+.cs-archetype-icon {
+  font-size: 18px;
+  color: #2a3e5e;
+  margin-bottom: 12px;
+  transition: color 0.2s;
+  display: block;
+}
+
+.cs-archetype-card.selected .cs-archetype-icon {
+  color: #c9a84c;
+}
+
+.cs-archetype-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #cfc4ae;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+
+.cs-archetype-subtitle {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #304055;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.cs-archetype-desc {
+  font-size: 10px;
+  color: #445870;
+  line-height: 1.65;
+  margin-bottom: 16px;
+  min-height: 56px;
+}
+
+/* STAT BARS */
+
+.cs-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cs-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cs-stat-label {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: #2a3e58;
+  width: 40px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.cs-archetype-card.selected .cs-stat-label {
+  color: #506880;
+}
+
+.cs-stat-bar-wrap {
+  flex: 1;
+  height: 3px;
+  background: #131f35;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.cs-stat-bar-fill {
+  height: 100%;
+  background: #1e3050;
+  border-radius: 2px;
+  transition: background 0.25s;
+  /* width set inline */
+}
+
+.cs-archetype-card.selected .cs-stat-bar-fill {
+  background: #c9a84c;
+}
+
+
+/* =============================================
+   SECTION 3 — PLATFORM
+   ============================================= */
+
+.cs-policies {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.cs-policy-option {
+  background: #0b1223;
+  border: 1px solid #1a2a42;
+  border-radius: 2px;
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cs-policy-option:hover {
+  border-color: #2a3e5e;
+  background: #0d1628;
+}
+
+.cs-policy-option.selected {
+  border-color: #8b1a1a;
+  background: #130808;
+}
+
+.cs-policy-none {
+  border-style: dashed;
+}
+
+.cs-policy-none.selected {
+  border-color: #2a3e5e;
+  background: #0b1223;
+  border-style: dashed;
+}
+
+.cs-policy-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #8095b0;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.cs-policy-option.selected:not(.cs-policy-none) .cs-policy-label {
+  color: #d05555;
+}
+
+.cs-policy-desc {
+  font-size: 9px;
+  color: #2d4055;
+  line-height: 1.65;
+}
+
+.cs-policy-option.selected .cs-policy-desc {
+  color: #4a3030;
+}
+
+.cs-policy-none.selected .cs-policy-desc {
+  color: #2d4055;
+}
+
+
+/* =============================================
+   SUBMIT
+   ============================================= */
+
+.cs-submit-area {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #131f35;
+}
+
+.cs-error {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #8b1a1a;
+  margin-bottom: 18px;
+  min-height: 18px;
+}
+
+.cs-submit-btn {
+  background: linear-gradient(135deg, #7a1515 0%, #b03228 100%);
+  color: #f0e8d8;
+  border: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 4px;
+  padding: 18px 0;
+  width: 100%;
+  max-width: 420px;
+  cursor: pointer;
+  border-radius: 2px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.cs-submit-btn:hover {
+  background: linear-gradient(135deg, #901a1a 0%, #c53a2e 100%);
+  box-shadow: 0 4px 24px rgba(176, 50, 40, 0.35);
+  transform: translateY(-1px);
+}
+
+.cs-submit-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.cs-difficulty-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.cs-difficulty-btn {
+  /* mirror your cs-policy-option styles */
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.cs-difficulty-btn.selected {
+  /* mirror your cs-policy-option.selected styles */
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.cs-difficulty-label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.cs-difficulty-desc {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.cs-issue-note {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+ 
+.cs-issue-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 20px;
+}
+ 
+.cs-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.cs-issue-label {
+  font-size: 11px;
+  color: #94a3b8;
+  min-width: 88px;
+  flex-shrink: 0;
+}
+ 
+.cs-issue-btns {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+ 
+/* Base position button */
+.cs-pos-btn {
+  flex: 1;
+  font-size: 10px;
+  padding: 4px 5px;
+  border-radius: 3px;
+  border: 1px solid #2a3548;
+  background: #131c2e;
+  color: #475569;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  margin: 0;
+  width: auto;
+}
+.cs-pos-btn:hover { background: #1a2438; color: #94a3b8; }
+ 
+/* Selected states */
+.cs-pos-lib-sel {
+  background: #1e3a5f !important;
+  border-color: #3b82f6 !important;
+  color: #93c5fd !important;
+}
+.cs-pos-ctr-sel {
+  background: #1e2535 !important;
+  border-color: #64748b !important;
+  color: #94a3b8 !important;
+}
+.cs-pos-con-sel {
+  background: #3f1a1a !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+}
+
+.cs-seed-import {
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px 0 6px;
+  border-bottom: .5px solid #1e2937;
+  margin-bottom: 14px;
+}
+#cs-seed-input {
+  flex: 1;
+  background: #131c2e;
+  border: .5px solid #2a3548;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 11px;
+  padding: 5px 10px;
+  transition: border-color .2s;
+}
+#cs-seed-load {
+  background: #1a2234; border: .5px solid #2a3548;
+  border-radius: 4px; color: #64748b; font-size: 11px;
+  padding: 5px 12px; cursor: pointer; white-space: nowrap;
+  margin: 0; width: auto;
+  transition: color .12s;
+}
+#cs-seed-load:hover { color: #e2e8f0; }

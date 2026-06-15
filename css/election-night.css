@@ -1,0 +1,632 @@
+/* ============================================
+   ELECTION NIGHT OVERLAY
+   ============================================ */
+
+#election-night-overlay {
+  position: fixed;
+  inset: 0;
+  background: #060b14;
+  z-index: 2000;
+  display: none;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  color: #e2e8f0;
+  overflow: hidden;
+}
+
+#election-night-overlay.en-visible {
+  display: flex;
+}
+
+/* ---- Header ---- */
+#en-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d1525;
+  border-bottom: 2px solid #1e3a5f;
+  padding: 8px 18px;
+  flex-shrink: 0;
+}
+
+#en-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border-radius: 3px;
+}
+
+#en-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: en-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes en-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+#en-title-block {
+  text-align: center;
+}
+
+#en-title {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #f0f4ff;
+  text-transform: uppercase;
+}
+
+#en-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+#en-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.en-speed-btn {
+  background: #1e2d45;
+  color: #94a3b8;
+  border: 1px solid #2d4a6b;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 1px;
+  width: auto;
+  margin: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.en-speed-btn:hover,
+.en-speed-btn.en-active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+#en-skip-btn {
+  background: transparent;
+  color: #475569;
+  border: 1px solid #334155;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  width: auto;
+  margin: 0;
+}
+
+#en-skip-btn:hover {
+  color: #94a3b8;
+  border-color: #475569;
+  background: transparent;
+}
+
+/* ---- EV Section ---- */
+#en-ev-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 10px 24px;
+  background: #0a111f;
+  border-bottom: 1px solid #1e2d45;
+  flex-shrink: 0;
+}
+
+.en-ev-side {
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.en-ev-party-label {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #64748b;
+}
+
+.en-ev-number {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.en-ev-number.en-dem { color: #3b82f6; }
+.en-ev-number.en-rep { color: #ef4444; }
+
+.en-ev-cand-name {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#en-ev-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+}
+
+#en-ev-bar-track {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background: #1e293b;
+  border-radius: 4px;
+  overflow: visible;
+  display: flex;
+}
+
+#en-ev-dem-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 4px 0 0 4px;
+  transition: width 0.5s ease;
+  min-width: 0;
+}
+
+#en-ev-uncalled-fill {
+  height: 100%;
+  background: #1e293b;
+  flex: 1;
+}
+
+#en-ev-rep-fill {
+  height: 100%;
+  background: #dc2626;
+  border-radius: 0 4px 4px 0;
+  transition: width 0.5s ease;
+  min-width: 0;
+}
+
+#en-270-marker {
+  position: absolute;
+  left: calc(270 / 538 * 100%);
+  top: -14px;
+  bottom: -14px;
+  width: 2px;
+  background: #fbbf24;
+  z-index: 5;
+}
+
+#en-270-marker::after {
+  content: "270";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: bold;
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+#en-ev-remaining {
+  font-size: 11px;
+  color: #475569;
+  text-align: center;
+}
+
+/* ---- Main Content Area ---- */
+#en-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* ---- State Grid ---- */
+#en-map-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #080e1a;
+  border-right: 1px solid #1e2d45;
+  overflow: hidden;
+}
+
+#en-map-title {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #475569;
+  margin-bottom: 8px;
+  align-self: flex-start;
+  padding-left: 4px;
+}
+
+#en-state-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  width: 100%;
+}
+
+.en-state-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: #fff;
+  border-radius: 3px;
+  cursor: default;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+  transition: background 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.en-abbr {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* EV badge inside cell */
+.en-state-cell .en-ev-badge {
+  display: none;
+}
+
+.en-state-cell.en-called .en-ev-badge {
+  display: block;
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 16px;
+  font-weight: bold;
+  opacity: 0.85;
+}
+
+/* Status color classes */
+.en-state-cell.status-not-started { background: #111827; color: #374151; }
+.en-state-cell.status-too-early   { background: #1f2937; color: #9ca3af; }
+.en-state-cell.status-too-close   { background: #78350f; color: #fde68a; animation: en-pulse 1.5s ease-in-out infinite; }
+.en-state-cell.status-dem-wins    { background: #2563eb; color: #fff; box-shadow: 0 0 10px #2563eb88; }
+.en-state-cell.status-rep-wins    { background: #dc2626; color: #fff; box-shadow: 0 0 10px #dc262688; }
+
+@keyframes en-pulse {
+  0%, 100% { filter: brightness(1);   }
+  50%       { filter: brightness(1.3); }
+}
+
+/* ---- Feed Panel ---- */
+#en-feed-panel {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #07101c;
+  overflow: hidden;
+}
+
+#en-feed-header {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #475569;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #1e2d45;
+  flex-shrink: 0;
+}
+
+#en-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+#en-feed::-webkit-scrollbar { width: 4px; }
+#en-feed::-webkit-scrollbar-track { background: #0a111f; }
+#en-feed::-webkit-scrollbar-thumb { background: #2d4a6b; border-radius: 2px; }
+
+.en-feed-item {
+  display: flex;
+  gap: 10px;
+  padding: 7px 14px;
+  border-bottom: 1px solid #0f1a2a;
+  animation: en-slide-in 0.3s ease;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@keyframes en-slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.en-feed-icon {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 3px;
+}
+
+.en-feed-item.type-call-dem .en-feed-icon     { background: #3b82f6; }
+.en-feed-item.type-call-rep .en-feed-icon     { background: #ef4444; }
+.en-feed-item.type-too-close .en-feed-icon    { background: #f59e0b; }
+.en-feed-item.type-update .en-feed-icon       { background: #374151; }
+
+.en-feed-text {
+  flex: 1;
+  color: #cbd5e1;
+}
+
+.en-feed-item.type-call-dem .en-feed-text { color: #93c5fd; font-weight: bold; }
+.en-feed-item.type-call-rep .en-feed-text { color: #fca5a5; font-weight: bold; }
+.en-feed-item.type-too-close .en-feed-text { color: #fde68a; }
+.en-feed-item.type-projection .en-feed-text { color: #fbbf24; font-weight: bold; }
+
+.en-feed-time {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #374151;
+  margin-top: 2px;
+}
+
+/* ---- Legend ---- */
+#en-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 14px;
+  background: #0a111f;
+  border-top: 1px solid #1e2d45;
+  flex-shrink: 0;
+}
+
+.en-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.en-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ---- Final Result Screen ---- */
+#en-result-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 11, 20, 0.96);
+  z-index: 100;
+  text-align: center;
+  gap: 24px;
+}
+
+#en-result-screen.en-visible {
+  display: flex;
+}
+
+#en-result-winner-label {
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+#en-result-name {
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1;
+  color: #f0f4ff;
+}
+
+#en-result-subline {
+  font-size: 15px;
+  color: #94a3b8;
+}
+
+#en-result-ev-breakdown {
+  display: flex;
+  gap: 32px;
+  font-size: 14px;
+}
+
+.en-result-ev-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.en-result-ev-item .ev-num {
+  font-size: 36px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.en-result-ev-item.dem .ev-num { color: #3b82f6; }
+.en-result-ev-item.rep .ev-num { color: #ef4444; }
+
+.en-result-ev-item .ev-label {
+  font-size: 11px;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+#en-result-close-btn {
+  background: #1e3a5f;
+  color: #93c5fd;
+  border: 1px solid #2563eb;
+  padding: 12px 32px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 1px;
+  width: auto;
+  margin: 0;
+  transition: background 0.2s;
+}
+
+#en-result-close-btn:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+#en-result-footer {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#en-result-seed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748b;
+}
+.en-result-seed-label { font-weight: 600; color: #475569; }
+#en-result-seed-code {
+  font-family: monospace;
+  font-size: 10px;
+  background: #0f172a;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#en-result-copy-seed {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#en-result-copy-seed:hover { background: #334155; color: #e2e8f0; }
+
+#en-result-journal-btn {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #1e293b;
+  padding: 8px 22px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#en-result-journal-btn:hover { background: #1e293b; color: #cbd5e1; }
+
+/* Lean states — not yet called but pointing somewhere */
+.en-state-cell.status-lean-dem-strong {
+  background: #2f5db6;    /* vivid medium blue — clearly heading Dem */
+  color: #dbeafe;
+  box-shadow: inset 0 0 0 1px #3b82f655;
+}
+.en-state-cell.status-lean-dem {
+  background: #16284e;    /* muted dark blue — slight lean */
+  color: #7db3f5;
+  border: 1px solid #1d3a70;
+}
+.en-state-cell.status-lean-rep-strong {
+  background: #b63a45;    /* vivid medium red — clearly heading Rep */
+  color: #fee2e2;
+  box-shadow: inset 0 0 0 1px #ef444455;
+}
+.en-state-cell.status-lean-rep {
+  background: #3a1018;    /* muted dark red — slight lean */
+  color: #f08080;
+  border: 1px solid #6f1d25;
+}
+
+/* Live pct text shown inside cell during counting */
+.en-live-pct {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.9;
+}
+.en-reporting {
+  display: block;
+  opacity: 0.5;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* Called pct shown after a state is projected */
+.en-called-pct {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+@keyframes en-call-flash {
+  0%   { filter: brightness(1);   transform: scale(1); }
+  20%  { filter: brightness(2.2); transform: scale(1.18); }
+  55%  { filter: brightness(1.5); transform: scale(1.10); }
+  100% { filter: brightness(1);   transform: scale(1); }
+}
+
+.en-state-cell.en-flash {
+  animation: en-call-flash 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 10;
+  position: relative;
+}
+
+/* Tossup calls pulse longer than safe calls — handled by animation-duration
+   override on the too-close status class when en-flash is also present */
+.en-state-cell.status-too-close.en-flash {
+  animation-duration: 1.4s;
+}

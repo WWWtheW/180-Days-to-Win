@@ -1,0 +1,168 @@
+/* ── Campaign Journal panel ────────────────────────────────── */
+#journal-panel {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: 360px;
+  background: #0f172a;
+  border-left: 1px solid #1e293b;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -20px 0 60px rgba(0,0,0,.5);
+}
+
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+.journal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: .03em;
+}
+.journal-close {
+  background: transparent;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 12px;
+  padding: 3px 9px;
+  cursor: pointer;
+  width: auto; margin: 0;
+  transition: color .12s, background .12s;
+}
+.journal-close:hover { background: #1e293b; color: #e2e8f0; }
+
+.journal-entries {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.journal-entry {
+  padding-bottom: 16px;
+  border-bottom: .5px solid #1e293b;
+}
+.journal-entry:last-child { border-bottom: none; }
+
+.journal-week-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 6px;
+}
+.journal-text {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+
+/* ── Journal open button (add wherever fits in UI) ─────────── */
+.journal-open-btn {
+  background: transparent;
+  border: .5px solid #2a3548;
+  border-radius: 4px;
+  color: #475569;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: color .12s, background .12s;
+  margin: 4px 0 0; width: 100%;
+}
+.journal-open-btn:hover { background: #1a2234; color: #94a3b8; }
+
+/* ── Archetype action category ─────────────────────────────── */
+.ap-cat-archetype { color: #c084fc; }
+
+.ap-btn-archetype {
+  border-left: 2px solid #a855f755;
+  position: relative;
+  overflow: hidden;
+}
+.ap-btn-archetype:not(:disabled):hover { border-left-color: #a855f7; }
+
+.ap-btn-archetype::after {
+  content: '✦';
+  position: absolute;
+  top: 3px; right: 4px;
+  font-size: 8px;
+  color: #c084fc;
+  opacity: .7;
+}
+
+/* ── Seed share row ────────────────────────────────────────── */
+.ap-seed-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 4px;
+}
+.ap-seed-code {
+  font-size: 9px;
+  color: #475569;
+  background: #0f172a;
+  border: .5px solid #1e293b;
+  border-radius: 3px;
+  padding: 3px 6px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}
+.ap-seed-copy {
+  background: #1a2234;
+  border: .5px solid #2a3548;
+  border-radius: 3px;
+  color: #64748b;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  margin: 0; width: auto;
+  transition: color .12s;
+}
+.ap-seed-copy:hover { color: #e2e8f0; }
+.ap-seed-copy.copied { color: #4ade80; }
+/* ── Election Night final journal entry ─────────────────────── */
+.journal-entry-final {
+  background: linear-gradient(135deg, #0f1f35 0%, #0a0f1a 100%);
+  border: 1px solid #1e3a5f;
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.journal-entry-final .journal-week-label {
+  color: #60a5fa;
+  letter-spacing: 0.12em;
+}
+.journal-entry-final .journal-text {
+  color: #cbd5e1;
+  font-style: italic;
+}
+
+/* ── Copy journal button ────────────────────────────────────── */
+.journal-copy-btn {
+  background: #1e293b;
+  color: #64748b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.journal-copy-btn:hover { background: #334155; color: #e2e8f0; }
+
+/* ── Press conference media label ───────────────────────────── */
+.ap-cat-media { color: #a78bfa; }

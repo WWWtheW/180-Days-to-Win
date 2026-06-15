@@ -1,0 +1,198 @@
+#map-container {
+  width: 95%;
+  height: 90%;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.placeholder {
+  color: #64748b;
+  font-size: 18px;
+}
+
+.state-cell {
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.state-cell:hover {
+  transform: scale(1.08);
+  filter: brightness(1.2);
+}
+
+#state-panel {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 240px;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  aspect-ratio: 2 / 1;
+  width: auto;
+  padding: 3px;
+  margin: 0;
+}
+
+.panel-close:hover {
+  background-color: red;
+}
+
+#state-panel {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 260px;
+  max-height: 75vh;
+  overflow-y: auto;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+}
+ 
+/* Meta row: EV · lean · volatility · support% */
+.sp-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  color: #94a3b8;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.sp-lean    { font-weight: 600; }
+.sp-support { color: #60a5fa; font-weight: 700; }
+ 
+/* Recent polls */
+.sp-poll-item {
+  font-size: 10px;
+  color: #64748b;
+  margin-bottom: 1px;
+}
+ 
+/* Section heading */
+.sp-section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #475569;
+  margin: 8px 0 4px;
+}
+ 
+/* Chart container */
+.sp-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+ 
+/* Single chart row */
+.sp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 14px;
+}
+ 
+.sp-row-label {
+  font-size: 10px;
+  color: #94a3b8;
+  width: 58px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ 
+.sp-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: #1e293b;
+  border-radius: 3px;
+  overflow: hidden;
+}
+ 
+.sp-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+ 
+/* Coalition bars — neutral green */
+.sp-bar-coal { background: #22c55e; }
+ 
+/* Issue lean dot/arrow */
+.sp-row-val {
+  font-size: 9px;
+  color: #64748b;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.sp-row-dot {
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.sp-row-dot {
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.sp-align {
+  font-size: 9px;
+  width: 10px;
+  text-align: center;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.sp-align-good { color: #4ade80; }
+.sp-align-bad  { color: #f87171; }
+.sp-align-mid  { color: #fbbf24; }
+
+/* State cell news dot */
+.sc-news-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sc-news-pulse 1.6s ease-in-out infinite;
+}
+.sc-news-scandal { background: #f87171; }
+.sc-news-gaffe   { background: #fbbf24; }
+.sc-news-event   { background: #60a5fa; }
+
+@keyframes sc-news-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* State cells need relative positioning for the dot to anchor correctly */
+.state-cell { position: relative; }
