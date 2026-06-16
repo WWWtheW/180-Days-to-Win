@@ -735,6 +735,7 @@
         );
         this.coalitions.forEach(c => c.adjustSupport(2));
         this.log.push('Debate victory');
+        this.journalEvents.push({ day: this.day, type: 'debate_win' });
         this.news.unshift({
           day: this.day,
           headline: `${this.player.name} wins presidential debate`
@@ -743,12 +744,14 @@
         this.player.resources.momentum -= 8;
         this.coalitions.forEach(c => c.adjustSupport(-2));
         this.log.push('Debate defeat');
+        this.journalEvents.push({ day: this.day, type: 'debate_loss' });
         this.news.unshift({
           day: this.day,
           headline: `${this.player.name} fumbles debate, costing support`
         });
       } else {
         this.log.push('Debate draw');
+        this.journalEvents.push({ day: this.day, type: 'debate_draw' });
         this.news.unshift({
           day: this.day,
           headline: 'Both candidates deliver mixed debate performances'
@@ -1045,10 +1048,10 @@
       } catch { return ''; }
     }
 
-static parseSeedString(str) {
-  if (!str || !str.startsWith('180DTW:')) return null;
-  try { return JSON.parse(atob(str.slice(7))); } catch { return null; }
-}
+    static parseSeedString(str) {
+      if (!str || !str.startsWith('180DTW:')) return null;
+      try { return JSON.parse(atob(str.slice(7))); } catch { return null; }
+    }
   }
 
   E.GameState = GameState;
