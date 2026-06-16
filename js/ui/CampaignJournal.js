@@ -34,6 +34,8 @@
     debate_win:      () => `A strong debate performance shifted the narrative, with analysts giving ${E.state?.player?.name ?? 'the candidate'} the edge across key exchanges.`,
     debate_loss:     () => `The debate did not go as planned — a difficult night that the campaign will need to put behind it quickly.`,
     debate_draw:     () => `Both candidates held their ground in the debate — no decisive winner, though the campaign felt momentum remain stable.`,
+    opponent_endorsement: (d) => `A blow this week: ${d.who || 'a key outside group'} endorsed the opposition instead, shifting ${(d.coalition || '').replace('_',' ')} voters away from the campaign.`,
+    press_conference:     (d) => `${E.state?.player?.name ?? 'The campaign'} held a press conference on ${d.topic || 'a key issue'}, keeping the media narrative under control for the week.`,
   };
 
   const OPPONENT_SENTENCES = [
@@ -129,7 +131,7 @@
 
       // 2. Event sentence (specific to what happened — no template fatigue issue since data-driven)
       const notableEvent = d.journalEvents.find(e =>
-        ['endorsement','viral_positive','viral_negative','state_event','vp_pick','october_surprise','debate_win','debate_loss','debate_draw'].includes(e.type)
+        ['endorsement','viral_positive','viral_negative','state_event','vp_pick','october_surprise','debate_win','debate_loss','debate_draw','opponent_endorsement','press_conference'].includes(e.type)
       );
       if (notableEvent) {
         const tpl = EVENT_SENTENCES[notableEvent.type];
@@ -197,7 +199,7 @@
       if (winner === 'tie') pool = tieTemplates;
       else pool = playerWon ? winTemplates : lossTemplates;
 
-      const text = pool[Math.floor(Math.random() * pool.length)];
+      const text = pool[Math.floor(this.game.rng.next() * pool.length)];
 
       this._electionEntry = { weekNum: 'ELECTION NIGHT', startDay: 181, endDay: 181, text };
     }
