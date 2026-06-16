@@ -68,10 +68,10 @@
       if (!p) return;
 
       // momentum naturally regresses toward mean
-      p.resources.momentum += (50 - p.resources.momentum) * 0.02;
+      //p.resources.momentum += (50 - p.resources.momentum) * 0.02;
 
       // random micro-variation
-      p.resources.momentum += this.random(-1.2, 1.2);
+      //p.resources.momentum += this.random(-1.2, 1.2);
 
       // money burn (campaign cost)
       p.resources.money -= 5000 + Math.floor(this.rng.range(0, 5000));
