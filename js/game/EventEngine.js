@@ -2,23 +2,7 @@
   'use strict';
   const E = window.ElectionSim;
 
-  const ENDORSERS = [
-    { name: 'National Education Assoc.', type: 'union', coalition: 'college',        boost: 4, state: null, policies: ['education', 'healthcare'] },
-    { name: 'United Auto Workers',       type: 'union', coalition: 'working_class',   boost: 5, state: 'MI', policies: ['jobs', 'healthcare'] },
-    { name: 'AARP',                      type: 'org',   coalition: 'seniors',          boost: 5, state: null, policies: ['healthcare', 'social_issues'] },
-    { name: 'NAACP',                     type: 'org',   coalition: 'minority',         boost: 5, state: null, policies: ['immigration', 'crime'] },
-    { name: 'AFL-CIO',                   type: 'union', coalition: 'working_class',   boost: 4, state: null, policies: ['jobs', 'economy'] },
-    { name: 'SEIU',                      type: 'union', coalition: 'working_class',   boost: 4, state: null, policies: ['jobs', 'healthcare'] },
-    { name: 'Sierra Club',               type: 'org',   coalition: 'young',            boost: 3, state: null, policies: ['climate', 'energy'] },
-    { name: 'League of Conservation Voters', type: 'org', coalition: 'young',         boost: 3, state: null, policies: ['climate', 'energy'] },
-    { name: 'American Farm Bureau',      type: 'org',   coalition: 'rural',            boost: 4, state: null, policies: ['taxes', 'energy'] },
-    { name: 'National Farmers Union',    type: 'org',   coalition: 'rural',            boost: 3, state: null, policies: ['jobs', 'taxes'] },
-    { name: 'US Conference of Mayors',   type: 'org',   coalition: 'urban',            boost: 4, state: null, policies: ['climate', 'education'] },
-    { name: 'Philadelphia Inquirer',     type: 'paper', coalition: 'suburban',         boost: 3, state: 'PA', policies: [] },
-    { name: 'Arizona Republic',          type: 'paper', coalition: 'suburban',         boost: 3, state: 'AZ', policies: [] },
-    { name: 'Detroit Free Press',        type: 'paper', coalition: 'urban',            boost: 2, state: 'MI', policies: [] },
-    { name: 'Des Moines Register',       type: 'paper', coalition: 'rural',            boost: 2, state: 'IA', policies: [] },
-  ];
+  const ENDORSERS = E.data.ENDORSERS;
 
   // Pool of state-level event definitions
   const STATE_EVENTS = [
@@ -332,14 +316,6 @@
       g.stateSupportEngine?.updateAllStates();
       g.journalEvents = g.journalEvents || [];
       g.journalEvents.push({ day: g.day, type: 'endorsement', who: endorser.name, coalition: endorser.coalition });
-    }
-
-    checkPolicyEndorsements(policyKey) {
-      const available = this._availableEndorsers().filter(e => e.policies.includes(policyKey));
-      for (const endorser of available) {
-        if (this.game.rng.next() > 0.40) continue;
-        this._applyEndorser(endorser, this._ctx());
-      }
     }
 
     // ── GAFFE ────────────────────────────────────────────────────
