@@ -27,7 +27,7 @@
           </div>
 
           <div id="ap-main">
-            ${this._catHTML('Ground', 'ground', ['rallyUrban','ruralTour','townHall','grassroots','gotvDrive'])}
+            ${this._catHTML('Ground', 'ground', ['rallyUrban','ruralTour','townHall','grassroots','communityOutreach','gotvDrive'])}
             ${this._catHTML('Air',    'air',    ['mediaBlitz','tvAds','attackAd'])}
             ${this._catHTML('Develop','develop',['debatePrep','volunteerDrive','oppoResearch'])}
 
@@ -49,6 +49,13 @@
             <!-- Political capital actions (no action slot except Party Rally) -->
             <div class="ap-cat-label ap-cat-capital">Political Capital</div>
             <div class="ap-btn-grid">
+              <button class="ap-btn ap-btn-capital" id="ap-capitol-meeting">
+                <div class="ap-sat-bar" style="display:none"></div>
+                <div class="ap-btn-inner">
+                  <span class="ap-btn-top"><span class="ap-btn-scope">🏛</span><span class="ap-btn-name">Capitol Meeting</span></span>
+                  <span class="ap-btn-cost">free · 1 slot · +⚡</span>
+                </div>
+              </button>
               <button class="ap-btn ap-btn-capital" id="ap-counter-spin">
                 <div class="ap-sat-bar" style="display:none"></div>
                 <div class="ap-btn-inner">
@@ -231,6 +238,7 @@
         }
 
         // Capital actions (no slot except party rally)
+        if (e.target.closest('#ap-capitol-meeting')) { this.game.capitolMeeting(); this.update(); this.onUpdate(); return; }
         if (e.target.closest('#ap-counter-spin'))   { this.game.counterSpin();    this.update(); this.onUpdate(); return; }
         if (e.target.closest('#ap-party-rally'))    { this.game.partyRally();     this.update(); this.onUpdate(); return; }
         if (e.target.closest('#ap-rapid-response')) { this.game.rapidResponse();  this.update(); this.onUpdate(); return; }
@@ -449,6 +457,11 @@
                     : !extraCheck ? tip
                     : `${costNeeded}⚡ political capital`;
       };
+
+      capBtn('ap-capitol-meeting', 0, left > 0, 'No action slots remaining');
+      const cmSat = g.actionSaturation?.['capitolMeeting'] || 0;
+      const cmBar = document.getElementById('ap-capitol-meeting')?.querySelector('.ap-sat-bar');
+      if (cmBar) { cmBar.style.display = cmSat > 0 ? 'block' : 'none'; cmBar.style.width = `${cmSat}%`; }
 
       capBtn('ap-counter-spin',   20, hasEvents, 'No active events to counter');
       capBtn('ap-party-rally',    15, left > 0,  'No action slots remaining');
