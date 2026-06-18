@@ -2,18 +2,14 @@
   'use strict';
   const E = window.ElectionSim;
 
-  const VP_OPTIONS = [
-    { name: 'Sen. Maria Santos',  state: 'NV', coalition: 'minority',      boost: 5, risk: 'Low',  archetype: 'Swing-State Champion',  desc: 'Former federal prosecutor with deep roots in Nevada\'s Latino community. Brings credibility on immigration and law enforcement.' },
-    { name: 'Gov. James Hartley', state: 'OH', coalition: 'working_class',  boost: 5, risk: 'Low',  archetype: 'Rust Belt Bridge',      desc: 'Two-term governor who flipped a red state. Commands enormous credibility with white working-class voters across the Midwest.' },
-    { name: 'Rep. Claire Nguyen', state: 'AZ', coalition: 'young',          boost: 4, risk: 'Med',  archetype: 'Next Generation',       desc: 'Youngest member of Congress at 38. Energises youth turnout dramatically, but some question her readiness on foreign policy.' },
-    { name: 'Sen. David Okafor',  state: 'GA', coalition: 'minority',       boost: 6, risk: 'Med',  archetype: 'Base Energizer',        desc: 'Civil rights leader turned senator. Supercharges minority turnout nationally. Some moderate voters view him as too progressive.' },
-    { name: 'Gov. Susan Marsh',   state: 'PA', coalition: 'suburban',       boost: 5, risk: 'Low',  archetype: 'Suburban Anchor',       desc: 'Former Republican-turned-independent who won Pennsylvania twice. A genuine crossover pick — moderate, experienced, scandal-free.' },
-  ];
+  // VP options now come from window.ElectionSim.data.VP_CANDIDATES,
+  // filtered by party in the VPPick constructor (see this.options).
 
   class VPPick {
     constructor(game, onComplete) {
       this.game       = game;
       this.onComplete = onComplete;
+      this.options    = (E.data?.VP_CANDIDATES?.[game.player?.party]) || [];
       this._build();
     }
 
@@ -30,7 +26,7 @@
           <div id="vp-pick-subtitle">Your running mate will shape coalition alignment and state-level support for the rest of the campaign.</div>
 
           <div id="vp-pick-cards">
-            ${VP_OPTIONS.map((vp, i) => `
+            ${this.options.map((vp, i) => `
               <div class="vp-card" data-index="${i}">
                 <div class="vp-card-head">
                   <div>
@@ -80,7 +76,7 @@
     _bindEvents() {
       this._overlay.querySelectorAll('.vp-card').forEach(card => {
         card.addEventListener('click', () => {
-          const vp = VP_OPTIONS[parseInt(card.dataset.index)];
+          const vp = this.options[parseInt(card.dataset.index)];
           this._applyVP(vp.name, vp.state, vp.coalition, vp.boost);
         });
       });
