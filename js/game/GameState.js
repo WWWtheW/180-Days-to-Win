@@ -176,6 +176,17 @@
           effects: { working_class: 1.5, young: 1, independent: 0.5 }
         }),
 
+        communityOutreach: new A({
+          name: 'Community Outreach',
+          type: 'ground',
+          targeting: 'state',
+          cost: { money: 90000 },
+          momentumEffect: 1.5,
+          statKeys: ['charisma', 'politicalInstinct'],
+          stateBoostBase: 2,
+          effects: { minority: 4, urban: 1, working_class: 0.5 }
+        }),
+
         // Only unlocks at day 140 — spends volunteers for lasting turnout
         gotvDrive: new A({
           name: 'GOTV Drive',
@@ -390,21 +401,60 @@
       return true;
     }
 
+    capitolMeeting() {
+      const r = this.player?.resources;
+      if (!r) return false;
+      if (this.dailyActionsUsed >= this.dailyActionLimit) return false;
+
+      const saturation = this.actionSaturation['capitolMeeting'] || 0;
+      const satMult    = 1 - (saturation / 100) * 0.65;
+
+      const instinct = (this.player.stats?.politicalInstinct ?? 50) / 100;
+      const yield_   = Math.round((8 + instinct * 6) * satMult);
+      r.politicalCapital = Math.min(100, (r.politicalCapital || 0) + yield_);
+
+      this.news.unshift({ day: this.day, headline: `${this.player.name} meets with party leaders on Capitol Hill, builds political capital` });
+      this.log.push(`Capitol meeting: +${yield_} capital (sat ${Math.round(saturation)})`);
+
+      this.actionSaturation['capitolMeeting'] = Math.min(100, saturation + 15);
+      this.dailyActionsUsed++;
+      this.actionHistory.push({ day: this.day, action: 'capitolMeeting', state: null });
+      return true;
+    }
+
     counterSpin() {
       const r = this.player?.resources;
       if (!r || (r.politicalCapital || 0) < 20) return false;
       if (!this.activeEvents?.length) return false;
       r.politicalCapital -= 20;
       const evt = this.activeEvents[0];
-      evt.remaining = Math.max(0, evt.remaining - 2);
+
+      // Risk/reward roll scaled by mediaSkill — no longer a guaranteed result.
+      const mediaSkill   = this.player.stats?.mediaSkill ?? 50;
+      const successChance = 0.40 + (mediaSkill / 100) * 0.35; // ~0.40-0.75
+      const backfireChance = Math.max(0.08, 0.22 - (mediaSkill / 100) * 0.14); // ~0.08-0.22
+      const roll = this.rng.next();
+
+      if (roll < successChance) {
+        evt.remaining = Math.max(0, evt.remaining - 3);
+        r.momentum = Math.min(100, (r.momentum || 50) + 4);
+        this.news.unshift({ day: this.day, headline: `${this.player.name} successfully pivots away from controversy` });
+        this.log.push('Counter-spin: success');
+      } else if (roll < 1 - backfireChance) {
+        evt.remaining = Math.max(0, evt.remaining - 1);
+        r.momentum = Math.min(100, (r.momentum || 50) + 1);
+        this.news.unshift({ day: this.day, headline: `${this.player.name} campaign moves to counter the news cycle` });
+        this.log.push('Counter-spin: partial effect');
+      } else {
+        evt.remaining = Math.min(10, evt.remaining + 1);
+        r.momentum = Math.max(0, (r.momentum || 50) - 3);
+        this.news.unshift({ day: this.day, headline: `${this.player.name}'s attempt to change the subject draws more scrutiny` });
+        this.log.push('Counter-spin: backfired');
+      }
+
       if (evt.remaining <= 0) {
         this.activeEvents = this.activeEvents.filter(e => e !== evt);
-        this.news.unshift({ day: this.day, headline: `${this.player.name} successfully pivots away from controversy` });
-      } else {
-        this.news.unshift({ day: this.day, headline: `${this.player.name} campaign moves to counter the news cycle` });
       }
-      r.momentum = Math.min(100, (r.momentum || 50) + 3);
-      this.log.push('Counter-spin used');
       return true;
     }
 
@@ -427,10 +477,30 @@
       const opp = this.opponents?.[0];
       if (!r || (r.politicalCapital || 0) < 25 || !opp) return false;
       r.politicalCapital -= 25;
-      opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 10);
-      r.momentum = Math.min(100, (r.momentum || 50) + 3);
-      this.news.unshift({ day: this.day, headline: `${this.player.name} rapid response team neutralises ${opp.name} attack` });
-      this.log.push('Rapid response used');
+
+      // Risk/reward roll scaled by politicalInstinct — can succeed big, land
+      // a modest hit, or backfire as tone-deaf.
+      const instinct       = this.player.stats?.politicalInstinct ?? 50;
+      const successChance  = 0.35 + (instinct / 100) * 0.35; // ~0.35-0.70
+      const backfireChance = Math.max(0.10, 0.25 - (instinct / 100) * 0.15); // ~0.10-0.25
+      const roll = this.rng.next();
+
+      if (roll < successChance) {
+        opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 14);
+        r.momentum = Math.min(100, (r.momentum || 50) + 5);
+        this.news.unshift({ day: this.day, headline: `${this.player.name} rapid response team decisively neutralises ${opp.name} attack` });
+        this.log.push('Rapid response: success');
+      } else if (roll < 1 - backfireChance) {
+        opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 6);
+        r.momentum = Math.min(100, (r.momentum || 50) + 1);
+        this.news.unshift({ day: this.day, headline: `${this.player.name} campaign pushes back against ${opp.name} attack` });
+        this.log.push('Rapid response: partial effect');
+      } else {
+        opp.resources.momentum = Math.min(100, (opp.resources.momentum || 50) + 2);
+        r.momentum = Math.max(0, (r.momentum || 50) - 4);
+        this.news.unshift({ day: this.day, headline: `${this.player.name}'s rapid response widely mocked as tone-deaf` });
+        this.log.push('Rapid response: backfired');
+      }
       return true;
     }
 
@@ -440,9 +510,25 @@
       if (!r || !event) return false;
       if ((r.politicalCapital || 0) < 20) return false;
       r.politicalCapital -= 20;
-      event.suppressed = true;
-      this.news.unshift({ day: this.day, headline: `${this.player.name} campaign moves to contain emerging story` });
-      this.log.push('Investigation suppressed for today');
+
+      // Risk/reward roll scaled by discipline + scandalResistance — suppression
+      // attempts can themselves leak and become a worse story.
+      const discipline = this.player.stats?.discipline ?? 50;
+      const resistance = this.player.stats?.scandalResistance ?? 50;
+      const successChance = 0.45 + ((discipline + resistance) / 200) * 0.35; // ~0.45-0.80
+      const roll = this.rng.next();
+
+      if (roll < successChance) {
+        event.suppressed = true;
+        this.news.unshift({ day: this.day, headline: `${this.player.name} campaign moves to contain emerging story` });
+        this.log.push('Investigation suppressed for today');
+      } else {
+        event.suppressed = false;
+        event.damage = (event.damage || 0) + 1;
+        r.momentum = Math.max(0, (r.momentum || 50) - 3);
+        this.news.unshift({ day: this.day, headline: `Leaked memo reveals ${this.player.name} campaign tried to bury the story` });
+        this.log.push('Investigation suppression attempt leaked — backfired');
+      }
       return true;
     }
 
@@ -579,9 +665,12 @@
       const saturation = this.actionSaturation['fundraiseGrassroots'] || 0;
       const satMult    = 1 - (saturation / 100) * 0.65; // same diminishing-returns curve as other actions
 
+      const fundraisingStat = (this.player.stats?.fundraising ?? 50) / 100;
+      const statMult        = 0.7 + fundraisingStat * 0.6; // ~0.98-1.27 across the 40-95 stat range
+
       // No money cost — small donors give regardless; scales with volunteers
       const volBonus   = Math.min(1.4, 1 + (r.volunteers || 0) / 20000);
-      const yield_     = Math.floor(80000 * volBonus * satMult * (1 + this.rng.range(-0.1, 0.1)));
+      const yield_     = Math.floor(80000 * volBonus * satMult * statMult * (1 + this.rng.range(-0.1, 0.1)));
       r.money         += yield_;
       r.volunteers     = Math.min(20000, (r.volunteers || 0) + Math.round(50 * satMult));
       // Slight working-class boost — grassroots signal — also scaled down by repetition
@@ -603,9 +692,12 @@
       const saturation = this.actionSaturation['fundraiseDonorDinner'] || 0;
       const satMult    = 1 - (saturation / 100) * 0.65;
 
+      const fundraisingStat = (this.player.stats?.fundraising ?? 50) / 100;
+      const statMult        = 0.7 + fundraisingStat * 0.6;
+
       // High yield but costs capital and a slight populist hit
       const momentumBonus = Math.max(0.7, 1 + (r.momentum - 50) / 150);
-      const yield_        = Math.floor(600000 * momentumBonus * satMult * (1 + this.rng.range(-0.15, 0.15)));
+      const yield_        = Math.floor(600000 * momentumBonus * satMult * statMult * (1 + this.rng.range(-0.15, 0.15)));
       r.money            += yield_;
       r.politicalCapital  = Math.min(100, (r.politicalCapital || 0) + 8); // donors bring capital
       r.politicalCapital -= 5; // cost to arrange
@@ -663,6 +755,12 @@
     generateOpponent(name, party, difficulty = 1.1) {
       this.opponentDifficulty = difficulty; // exposed for systems like endorsement bias
       const opp = new Candidate(name, party, this.rng, false, null, difficulty);
+      // Opponent archetype was previously drawn from an unrelated 7-item list that
+      // had no relationship to the 5 player-selectable archetypes (and included
+      // 'veteran' inconsistently). Use the same 5-option pool so requiredArchetype
+      // gating in OpponentAI actually means something for the opponent too.
+      const archetypePool = ['veteran', 'firebrand', 'insider', 'outsider', 'technocrat'];
+      opp.identity.archetype = archetypePool[Math.floor(this.rng.next() * archetypePool.length)];
       this.opponents.push(opp);
       this.aiControllers.push(new E.OpponentAI(opp, this));
       return opp;
@@ -756,11 +854,7 @@
       this.stateSupportEngine.updateAllStates();
       this.processEvents();
 
-      if (this.day % 5 === 0) {
-        this.polling.generateNationalPoll();
-        const battlegrounds = this.polling.getBattlegroundStates();
-        battlegrounds.forEach(state => this.polling.generateStatePoll(state));
-      }
+      this.polling.tick();
 
       this.events?.maybeTriggerEvent();
 
@@ -908,9 +1002,19 @@
                   const r = this.player?.resources;
                   if (r && (r.politicalCapital || 0) >= 20) {
                     r.politicalCapital -= 20;
-                    r.momentum = Math.min(100, (r.momentum || 50) + 3);
-                    if (opp) opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 10);
-                    this.news.unshift({ day: this.day, headline: `${this.player.name} campaign amplifies opponent controversy` });
+                    // Genuinely high risk/reward — mediaSkill-scaled roll.
+                    const mediaSkill = this.player.stats?.mediaSkill ?? 50;
+                    const successChance = 0.40 + (mediaSkill / 100) * 0.30; // ~0.40-0.70
+                    if (this.rng.next() < successChance) {
+                      r.momentum = Math.min(100, (r.momentum || 50) + 6);
+                      if (opp) opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 16);
+                      this.news.unshift({ day: this.day, headline: `${this.player.name} campaign successfully amplifies opponent controversy` });
+                      this.log.push('Amplify scandal: success');
+                    } else {
+                      r.momentum = Math.max(0, (r.momentum || 50) - 4);
+                      this.news.unshift({ day: this.day, headline: `${this.player.name}'s attacks on opponent controversy seen as overreach` });
+                      this.log.push('Amplify scandal: backfired');
+                    }
                   }
                 } else {
                   if (opp) opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 3);
