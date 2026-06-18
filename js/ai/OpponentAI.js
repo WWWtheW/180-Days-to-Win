@@ -1,16 +1,8 @@
 (function () {
   const E = window.ElectionSim;
 
-  const VP_POOL = [
-    { name: 'Sen. Maria Santos',  state: 'NV', coalition: 'minority',      boost: 4, archetype: 'Regional Favourite' },
-    { name: 'Gov. James Hartley', state: 'OH', coalition: 'working_class',  boost: 4, archetype: 'Party Unifier' },
-    { name: 'Rep. Claire Nguyen', state: 'AZ', coalition: 'young',          boost: 3, archetype: 'Next Generation' },
-    { name: 'Sen. David Okafor',  state: 'GA', coalition: 'minority',       boost: 5, archetype: 'Base Energizer' },
-    { name: 'Gov. Susan Marsh',   state: 'PA', coalition: 'suburban',       boost: 4, archetype: 'Swing State Anchor' },
-    { name: 'Rep. Tom Callahan',  state: 'MI', coalition: 'working_class',  boost: 4, archetype: 'Rust Belt Bridge' },
-    { name: 'Sen. Elena Vargas',  state: 'FL', coalition: 'minority',       boost: 5, archetype: 'Sunbelt Contender' },
-    { name: 'Gov. Aaron Pierce',  state: 'WI', coalition: 'independent',    boost: 3, archetype: 'Crossover Appeal' },
-  ];
+  // VP_POOL now comes from window.ElectionSim.data.VP_CANDIDATES, filtered
+  // by the opponent's own party in pickVP() below.
 
   class OpponentAI {
     constructor(candidate, gameState) {
@@ -36,9 +28,12 @@
 
       this.applyPressure(target);
 
-      const actionKeys = Object.keys(this.game.actions).filter(k =>
-        !['gotvDrive'].includes(k) || this.game.day > 140
-      );
+      const actionKeys = Object.keys(this.game.actions).filter(k => {
+        const action = this.game.actions[k];
+        if (action.requiredArchetype && action.requiredArchetype !== this.candidate.identity?.archetype) return false;
+        if (k === 'gotvDrive' && this.game.day <= 140) return false;
+        return true;
+      });
       const actionKey = this.game.rng.pick(actionKeys);
       this.execute(actionKey);
 
@@ -49,6 +44,9 @@
     }
 
     pickVP() {
+      const VP_POOL = (E.data?.VP_CANDIDATES?.[this.candidate.party]) || [];
+      if (!VP_POOL.length) return;
+
       // Pick the VP whose home state is most contested (highest value to AI)
       const ranked   = this.evaluateStates().sort((a, b) => b.value - a.value);
       const topAbbrs = ranked.slice(0, 8).map(x => x.state.abbr);
@@ -87,8 +85,12 @@
     }
 
     applyPressure(state) {
+      // Opponent momentum now actually matters: a damaged opponent (post-scandal,
+      // post-rapid-response) applies meaningfully weaker pressure; a surging one applies more.
+      const momentum     = this.candidate.resources?.momentum ?? 50;
+      const momentumMult = 0.6 + (momentum / 100) * 0.8; // 0.6x @ 0, 1.0x @ 50, 1.4x @ 100
       const intensity = (this.candidate.stats.charisma * 0.6 +
-                         this.candidate.stats.politicalInstinct * 0.4) / 100;
+                         this.candidate.stats.politicalInstinct * 0.4) / 100 * momentumMult;
       state.aiPressure = Math.min((state.aiPressure || 0) + intensity, 8);
       this.game.news.unshift({
         day:      this.game.day,
@@ -108,7 +110,9 @@
       const action = this.game.actions[actionKey];
       if (!action) return;
       const instinct      = this.candidate.stats.politicalInstinct;
-      const effectiveness = (instinct / 100) * 0.8;
+      const momentum      = this.candidate.resources?.momentum ?? 50;
+      const momentumMult  = 0.6 + (momentum / 100) * 0.8;
+      const effectiveness = (instinct / 100) * 0.8 * momentumMult;
       for (const [name, delta] of Object.entries(action.effects)) {
         const coalition = this.game.coalitions.find(c => c.name === name);
         if (coalition) coalition.adjustSupport(-delta * effectiveness);
