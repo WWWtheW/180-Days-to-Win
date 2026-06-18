@@ -2,54 +2,15 @@
   'use strict';
   const E = window.ElectionSim;
 
-  // Anti-repetition: each template has an id; track which were used in recent weeks
-  const OPENERS = [
-    (d) => `Week ${d.week} opened with the campaign ${d.trailing ? 'fighting to close a gap' : 'pressing a hard-won lead'} in the polls.`,
-    (d) => `Entering week ${d.week}, ${d.name}'s operation ${d.trailing ? 'faced mounting pressure' : 'moved with growing confidence'}.`,
-    (d) => `The ${d.week === 1 ? 'first' : d.week === 2 ? 'second' : `${d.week}th`} week of the general found ${d.name} ${d.trailing ? 'in a tighter position than hoped' : 'consolidating momentum'}.`,
-    (d) => `Day ${d.startDay} kicked off with ${d.name}'s campaign ${d.momentum > 60 ? 'riding high' : d.momentum < 40 ? 'under pressure' : 'in a holding pattern'} on momentum.`,
-    (d) => `Week ${d.week}: ${d.name}'s team ${d.slotsUsed > 8 ? 'drove a punishing schedule' : 'worked methodically'} across the battleground map.`,
-  ];
-
-  const STATE_SENTENCES = [
-    (d) => d.topState ? `The bulk of campaign activity centred on ${d.topState}, where the team invested heavily.` : null,
-    (d) => d.topState ? `${d.topState} drew the most attention this week — a reflection of its place in the path to 270.` : null,
-    (d) => d.topState ? `Field operations in ${d.topState} consumed the most resources, with the campaign tracking closely there.` : null,
-    (d) => d.topState && d.topState2 ? `${d.topState} and ${d.topState2} both saw sustained activity as the campaign worked its battleground map.` : null,
-  ];
-
-  const COALITION_SENTENCES = [
-    (d) => d.topCoalition ? `Outreach to ${d.topCoalition.replace('_',' ')} voters remained a central focus throughout the week.` : null,
-    (d) => d.topCoalition ? `The campaign's messaging leaned into ${d.topCoalition.replace('_',' ')} concerns, hoping to consolidate that bloc.` : null,
-    (d) => null,
-  ];
-
-  const EVENT_SENTENCES = {
-    endorsement:     (d) => `A highlight was an endorsement from ${d.who || 'a major outside group'}, which added credibility with ${(d.coalition || '').replace('_',' ')} voters.`,
-    viral_positive:  () => `A moment from the trail went viral online, generating an unexpected surge in enthusiasm and volunteer sign-ups.`,
-    viral_negative:  () => `A clip circulated online drew ridicule — a reminder of how quickly the news cycle can turn.`,
-    state_event:     (d) => `Events in ${d.state || 'a key state'} reshaped local priorities, adding urgency to the campaign's ground presence there.`,
-    vp_pick:         (d) => `The selection of ${d.name} as running mate defined the week, energising the base and drawing heavy media coverage.`,
-    october_surprise:(d) => `A late-breaking story — ${d.label || 'major news event'} — dominated the final days of the week and forced the campaign onto defence.`,
-    debate_win:      () => `A strong debate performance shifted the narrative, with analysts giving ${E.state?.player?.name ?? 'the candidate'} the edge across key exchanges.`,
-    debate_loss:     () => `The debate did not go as planned — a difficult night that the campaign will need to put behind it quickly.`,
-    debate_draw:     () => `Both candidates held their ground in the debate — no decisive winner, though the campaign felt momentum remain stable.`,
-    opponent_endorsement: (d) => `A blow this week: ${d.who || 'a key outside group'} endorsed the opposition instead, shifting ${(d.coalition || '').replace('_',' ')} voters away from the campaign.`,
-    press_conference:     (d) => `${E.state?.player?.name ?? 'The campaign'} held a press conference on ${d.topic || 'a key issue'}, keeping the media narrative under control for the week.`,
-  };
-
-  const OPPONENT_SENTENCES = [
-    (d) => d.oppName ? `${d.oppName} spent the week ${d.oppLeading ? 'defending a lead' : 'pressing hard in battlegrounds'} of their own.` : null,
-    (d) => d.oppName ? `On the other side of the race, ${d.oppName}'s campaign ${d.oppMomentum > 55 ? 'appeared energised' : 'showed signs of strain'}.` : null,
-    (d) => null,
-  ];
-
-  const CLOSERS = [
-    (d) => `The campaign moves into week ${d.week + 1} with ${180 - d.endDay} days remaining.`,
-    (d) => `With ${180 - d.endDay} days to election day, every decision carries more weight than the last.`,
-    (d) => `${d.trailing ? 'The math remains daunting, but' : 'Momentum intact,'} the road ahead demands total focus.`,
-    (d) => d.endDay > 160 ? 'The final sprint begins.' : `The clock is ticking — ${180 - d.endDay} days left.`,
-  ];
+  // Templates live in js/data/journal-templates.js — loaded before this file.
+  // Getters so hot-reloading or late binding works without issues.
+  const T          = () => E.data?.JOURNAL_TEMPLATES ?? {};
+  const OPENERS    = () => T().OPENERS    ?? [];
+  const STATE_S    = () => T().STATE_SENTENCES    ?? [];
+  const COAL_S     = () => T().COALITION_SENTENCES ?? [];
+  const EVENT_S    = () => T().EVENT_SENTENCES    ?? {};
+  const OPP_S      = () => T().OPPONENT_SENTENCES  ?? [];
+  const CLOSERS    = () => T().CLOSERS    ?? [];
 
   function pickFresh(templates, usedSet, data) {
     const available = templates.filter((_, i) => !usedSet.has(i));
@@ -125,35 +86,30 @@
       const d = this._weekData(weekNum);
       const sentences = [];
 
-      // 1. Opener
-      const opener = pickFresh(OPENERS, this._usedOpeners, d);
+      const opener = pickFresh(OPENERS(), this._usedOpeners, d);
       if (opener) sentences.push(opener);
 
-      // 2. Event sentence (specific to what happened — no template fatigue issue since data-driven)
       const notableEvent = d.journalEvents.find(e =>
-        ['endorsement','viral_positive','viral_negative','state_event','vp_pick','october_surprise','debate_win','debate_loss','debate_draw','opponent_endorsement','press_conference'].includes(e.type)
+        Object.keys(EVENT_S()).includes(e.type)
       );
       if (notableEvent) {
-        const tpl = EVENT_SENTENCES[notableEvent.type];
+        const tpl = EVENT_S()[notableEvent.type];
         if (tpl) sentences.push(tpl(notableEvent));
       } else {
-        // Fall back to state or coalition sentence
-        const stateSentence = pickFresh(STATE_SENTENCES, this._usedStates, d);
+        const stateSentence = pickFresh(STATE_S(), this._usedStates, d);
         if (stateSentence) sentences.push(stateSentence);
         else {
-          const coalSentence = pickFresh(COALITION_SENTENCES, this._usedCoals, d);
+          const coalSentence = pickFresh(COAL_S(), this._usedCoals, d);
           if (coalSentence) sentences.push(coalSentence);
         }
       }
 
-      // 3. Opponent sentence (every other week)
       if (weekNum % 2 === 0) {
-        const oppSentence = pickFresh(OPPONENT_SENTENCES, this._usedOpps, d);
+        const oppSentence = pickFresh(OPP_S(), this._usedOpps, d);
         if (oppSentence) sentences.push(oppSentence);
       }
 
-      // 4. Closer
-      const closer = pickFresh(CLOSERS, this._usedClosers, d);
+      const closer = pickFresh(CLOSERS(), this._usedClosers, d);
       if (closer) sentences.push(closer);
 
       return {
@@ -172,34 +128,24 @@
     // ── Election Night final entry ─────────────────────────────
 
     addElectionEntry({ winner, demEV, repEV, playerWon }) {
-      const g    = this.game;
-      const p    = g.player;
-      const opp  = g.opponents?.[0];
-      const isDem = p.party === 'Democrat';
+      const g      = this.game;
+      const p      = g.player;
+      const opp    = g.opponents?.[0];
+      const isDem  = p.party === 'Democrat';
       const playerEV = isDem ? demEV : repEV;
       const oppEV    = isDem ? repEV  : demEV;
       const oppName  = opp?.name ?? 'the opponent';
+      const ctx      = { p, opp, playerEV, oppEV, oppName };
 
-      const winTemplates = [
-        `After 180 days on the trail, ${p.name} won the presidency — ${playerEV} to ${oppEV} in electoral votes. A hard-fought campaign ends in victory.`,
-        `Election Night delivered what the campaign had worked toward: ${p.name} elected the next President of the United States with ${playerEV} electoral votes.`,
-        `The map turned in ${p.name}'s favour as the night wore on. ${playerEV} to ${oppEV} — a result that reflects 180 days of strategy, sacrifice, and relentless campaigning.`
-      ];
-      const lossTemplates = [
-        `The campaign ended on a painful note. ${p.name} fell short with ${playerEV} electoral votes — ${oppName} carried the night with ${oppEV}.`,
-        `After 180 days, the final map did not hold. ${oppName} won the presidency with ${oppEV} electoral votes. There will be time for reflection, but not tonight.`,
-        `${oppName} claimed the presidency ${oppEV} to ${playerEV}. Despite everything this campaign built, Election Night delivered a loss that stings deeply.`
-      ];
-      const tieTemplates = [
-        `No candidate reached 270 electoral votes. A contingent election now goes to the House — a genuinely historic and uncertain moment.`,
-        `The electoral map deadlocked — ${playerEV} to ${oppEV}. An unprecedented outcome that history will remember.`
-      ];
+      const T    = window.ElectionSim.data?.JOURNAL_TEMPLATES ?? {};
+      const pool = winner === 'tie' ? (T.ELECTION_TIE ?? [])
+                 : playerWon       ? (T.ELECTION_WIN  ?? [])
+                 :                   (T.ELECTION_LOSS ?? []);
 
-      let pool;
-      if (winner === 'tie') pool = tieTemplates;
-      else pool = playerWon ? winTemplates : lossTemplates;
-
-      const text = pool[Math.floor(this.game.rng.next() * pool.length)];
+      const rng  = g.rng ? () => g.rng.next() : Math.random;
+      const text = pool.length
+        ? pool[Math.floor(rng() * pool.length)](ctx)
+        : `The election is over. ${playerWon ? 'Victory.' : 'Defeat.'}`;
 
       this._electionEntry = { weekNum: 'ELECTION NIGHT', startDay: 181, endDay: 181, text };
     }
