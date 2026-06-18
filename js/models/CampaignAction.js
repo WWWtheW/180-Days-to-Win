@@ -74,28 +74,28 @@
           (gameState.debatePreparation || 0) + this.debatePrepEffect * eff;
       }
 
-      // ── Opponent effects ─────────────────────────────────────────
-      const opp = gameState.opponents?.[0];
-      if (opp) {
-        if (this.opponentMomentumEffect) {
-          opp.resources.momentum = Math.max(
-            0, Math.min(100, (opp.resources.momentum || 50) + this.opponentMomentumEffect * eff)
-          );
-        }
-        if (this.triggerOpponentEvent) {
-          opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 5 * eff);
-          gameState.news.unshift({
-            day:      gameState.day,
-            headline: `${opp.name}'s campaign hit by opposition research leak`
-          });
-        }
-      }
-
-      this._generateNews(gameState, player, targetState);
+      this._applyOpponentEffects(gameState, eff);
       gameState.log.push(
         `Action: ${this.name}${targetState ? ' → ' + targetState.name : ''} (eff ${Math.round(eff * 100)}%)`
       );
       return true;
+    }
+
+    _applyOpponentEffects(gameState, eff) {
+      const opp = gameState.opponents?.[0];
+      if (!opp) return;
+      if (this.opponentMomentumEffect) {
+        opp.resources.momentum = Math.max(
+          0, Math.min(100, (opp.resources.momentum || 50) + this.opponentMomentumEffect * eff)
+        );
+      }
+      if (this.triggerOpponentEvent) {
+        opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 5 * eff);
+        gameState.news.unshift({
+          day:      gameState.day,
+          headline: `${opp.name}'s campaign hit by opposition research leak`
+        });
+      }
     }
 
     _statMult(player) {
@@ -106,30 +106,6 @@
       return Math.max(0.4, Math.min(1.6, avg / 62.5));
     }
 
-    _generateNews(gameState, player, targetState) {
-      let headline = null;
-
-      if (targetState) {
-        if (this.opponentMomentumEffect < 0) {
-          // Attack action — different framing
-          headline = `${player.name} launches attack campaign in ${targetState.name}`;
-        } else if (this.type === 'air') {
-          headline = `${player.name} launches ad campaign in ${targetState.name}`;
-        } else if (this.name === 'GOTV Drive') {
-          headline = `${player.name}'s team mobilises voters in ${targetState.name}`;
-        } else {
-          headline = `${player.name} campaigns in ${targetState.name}`;
-        }
-      } else if (this.triggerOpponentEvent) {
-        headline = null; // opponent event generates its own headline above
-      } else if (this.type === 'air') {
-        headline = `${player.name} launches national media campaign`;
-      }
-
-      if (headline) {
-        gameState.news.unshift({ day: gameState.day, headline });
-      }
-    }
   }
 
   E.models = E.models || {};
