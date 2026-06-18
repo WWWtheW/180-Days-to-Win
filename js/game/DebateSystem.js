@@ -64,9 +64,15 @@
     triggerDebateModal(onResolved) {
       const debateNum = this.debateDays.indexOf(this.game.day) + 1;
 
-      // Randomly pick 3 of the 5 topics to offer each debate
-      const shuffled = [...DEBATE_TOPICS].sort(() => this.game.rng.next() - 0.5);
-      const offered  = shuffled.slice(0, 3);
+      // Pick a thematic pool from responses.js; fall back to shuffling built-in topics
+      const pools = window.ElectionSim.data?.DEBATE_RESPONSES;
+      let offered;
+      if (pools?.length) {
+        offered = this._pick(pools);  // seeded pick of one 3-topic pool
+      } else {
+        const shuffled = [...DEBATE_TOPICS].sort(() => this.game.rng.next() - 0.5);
+        offered = shuffled.slice(0, 3);
+      }
 
       E.ChoiceModal.show({
         tag:      `PRESIDENTIAL DEBATE ${debateNum} OF 3`,
@@ -114,6 +120,10 @@
     // Kept for backward compat — called if modal is somehow skipped
     runDebate() {
       return this._resolve(DEBATE_TOPICS[0]);
+    }
+
+    _pick(arr) {
+      return arr[Math.floor(this.game.rng.next() * arr.length)];
     }
   }
 
