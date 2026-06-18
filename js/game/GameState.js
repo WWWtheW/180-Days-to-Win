@@ -335,6 +335,7 @@
 
       // Raise saturation; decays daily (see advanceDay)
       this.actionSaturation[key] = Math.min(100, saturation + 15);
+      this._generateActionNews(key, action, targetState);
       // Special post-apply logic for archetype actions
       if (key === 'rallyingCry') {
         this.actionCooldowns['rallyingCry'] = 15;
@@ -484,10 +485,15 @@
         choices: shuffled.map(t => ({ label: t.label, desc: t.desc, tag: t.tag })),
         onChoice: (i) => {
           shuffled[i].apply(game);
-          game.news.unshift({ day: game.day, headline: `${game.player.name} holds press conference on ${shuffled[i].label.toLowerCase()}` });
+          const topicKey = 'press_' + shuffled[i].label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+          const pool = window.ElectionSim.data?.NEWS_EVENTS?.[topicKey];
+          const headline = pool?.length
+            ? pool[Math.floor(game.rng.next() * pool.length)].replace(/\{name\}/g, game.player.name)
+            : `${game.player.name} holds press conference on ${shuffled[i].label.toLowerCase()}`;
+          game.news.unshift({ day: game.day, headline });
           game.log.push(`Press conference: ${shuffled[i].label}`);
           game.journalEvents = game.journalEvents || [];
-          game.journalEvents.push({ day: game.day, type: 'press_conference', topic: shuffled[i].label });
+          game.journalEvents.push({ day: game.day, type: 'press_conference', topic: shuffled[i].label, name: game.player.name });
         }
       });
       return true;
@@ -518,6 +524,45 @@
       return 'ok';
     }
 
+    _generateActionNews(key, action, targetState) {
+      const p      = this.player;
+      const pools  = window.ElectionSim.data?.NEWS_EVENTS;
+      const name   = p?.name ?? '';
+      const state  = targetState?.name ?? '';
+
+      let headline = null;
+
+      if (pools) {
+        // Try exact action key first, then type-based fallback
+        const attackKey = action.opponentMomentumEffect < 0 ? 'attack_state' : null;
+        const typeKey   = targetState
+          ? (attackKey ?? `${action.type}_state`)
+          : (action.triggerOpponentEvent ? null : `${action.type}_national`);
+        const pool = pools[key] ?? (typeKey ? pools[typeKey] : null);
+
+        if (pool?.length) {
+          const tpl = pool[Math.floor(this.rng.next() * pool.length)];
+          headline  = tpl.replace(/\{name\}/g, name).replace(/\{state\}/g, state);
+        }
+      }
+
+      // Fallback to hardcoded if pool missing
+      if (!headline) {
+        if (action.triggerOpponentEvent) return; // oppo research has its own headline
+        if (targetState) {
+          headline = action.opponentMomentumEffect < 0
+            ? `${name} launches attack campaign in ${state}`
+            : action.type === 'air'
+              ? `${name} launches ad campaign in ${state}`
+              : `${name} campaigns in ${state}`;
+        } else if (action.type === 'air') {
+          headline = `${name} launches national media campaign`;
+        }
+      }
+
+      if (headline) this.news.unshift({ day: this.day, headline });
+    }
+
     canAfford(key) {
       return this.getActionStatus(key) === 'ok';
     }
@@ -529,32 +574,50 @@
     fundraiseGrassroots() {
       const r = this.player?.resources;
       if (!r) return false;
-      // No momentum cost — small donors give regardless; scales with volunteers
+      if (this.dailyActionsUsed >= this.dailyActionLimit) return false;
+
+      const saturation = this.actionSaturation['fundraiseGrassroots'] || 0;
+      const satMult    = 1 - (saturation / 100) * 0.65; // same diminishing-returns curve as other actions
+
+      // No money cost — small donors give regardless; scales with volunteers
       const volBonus   = Math.min(1.4, 1 + (r.volunteers || 0) / 20000);
-      const yield_     = Math.floor(80000 * volBonus * (1 + this.rng.range(-0.1, 0.1)));
+      const yield_     = Math.floor(80000 * volBonus * satMult * (1 + this.rng.range(-0.1, 0.1)));
       r.money         += yield_;
-      r.volunteers     = Math.min(20000, (r.volunteers || 0) + 50); // small volunteer bump
-      // Slight working-class boost — grassroots signal
-      this.getCoalition('working_class')?.adjustSupport(0.3);
+      r.volunteers     = Math.min(20000, (r.volunteers || 0) + Math.round(50 * satMult));
+      // Slight working-class boost — grassroots signal — also scaled down by repetition
+      this.getCoalition('working_class')?.adjustSupport(0.3 * satMult);
       this.news.unshift({ day: this.day, headline: `${this.player.name} grassroots fundraiser raises $${Math.round(yield_/1000)}k` });
-      this.log.push(`Grassroots fundraise: +$${yield_}`);
+      this.log.push(`Grassroots fundraise: +$${yield_} (sat ${Math.round(saturation)})`);
+
+      this.actionSaturation['fundraiseGrassroots'] = Math.min(100, saturation + 15);
+      this.dailyActionsUsed++;
+      this.actionHistory.push({ day: this.day, action: 'fundraiseGrassroots', state: null });
       return true;
     }
 
     fundraiseDonorDinner() {
       const r = this.player?.resources;
       if (!r || (r.politicalCapital || 0) < 5) return false;
+      if (this.dailyActionsUsed >= this.dailyActionLimit) return false;
+
+      const saturation = this.actionSaturation['fundraiseDonorDinner'] || 0;
+      const satMult    = 1 - (saturation / 100) * 0.65;
+
       // High yield but costs capital and a slight populist hit
       const momentumBonus = Math.max(0.7, 1 + (r.momentum - 50) / 150);
-      const yield_        = Math.floor(600000 * momentumBonus * (1 + this.rng.range(-0.15, 0.15)));
+      const yield_        = Math.floor(600000 * momentumBonus * satMult * (1 + this.rng.range(-0.15, 0.15)));
       r.money            += yield_;
       r.politicalCapital  = Math.min(100, (r.politicalCapital || 0) + 8); // donors bring capital
       r.politicalCapital -= 5; // cost to arrange
-      // Small working-class hit — seen as out of touch
-      this.getCoalition('working_class')?.adjustSupport(-0.5);
-      this.getCoalition('college')?.adjustSupport(0.3);
+      // Small working-class hit — seen as out of touch — scaled by repetition too
+      this.getCoalition('working_class')?.adjustSupport(-0.5 * satMult);
+      this.getCoalition('college')?.adjustSupport(0.3 * satMult);
       this.news.unshift({ day: this.day, headline: `${this.player.name} attends high-dollar fundraiser — raises $${Math.round(yield_/1000)}k` });
-      this.log.push(`Donor dinner: +$${yield_}`);
+      this.log.push(`Donor dinner: +$${yield_} (sat ${Math.round(saturation)})`);
+
+      this.actionSaturation['fundraiseDonorDinner'] = Math.min(100, saturation + 15);
+      this.dailyActionsUsed++;
+      this.actionHistory.push({ day: this.day, action: 'fundraiseDonorDinner', state: null });
       return true;
     }
 
@@ -598,6 +661,7 @@
     }
 
     generateOpponent(name, party, difficulty = 1.1) {
+      this.opponentDifficulty = difficulty; // exposed for systems like endorsement bias
       const opp = new Candidate(name, party, this.rng, false, null, difficulty);
       this.opponents.push(opp);
       this.aiControllers.push(new E.OpponentAI(opp, this));
@@ -735,7 +799,6 @@
         );
         this.coalitions.forEach(c => c.adjustSupport(2));
         this.log.push('Debate victory');
-        this.journalEvents.push({ day: this.day, type: 'debate_win' });
         this.news.unshift({
           day: this.day,
           headline: `${this.player.name} wins presidential debate`
@@ -744,14 +807,12 @@
         this.player.resources.momentum -= 8;
         this.coalitions.forEach(c => c.adjustSupport(-2));
         this.log.push('Debate defeat');
-        this.journalEvents.push({ day: this.day, type: 'debate_loss' });
         this.news.unshift({
           day: this.day,
           headline: `${this.player.name} fumbles debate, costing support`
         });
       } else {
         this.log.push('Debate draw');
-        this.journalEvents.push({ day: this.day, type: 'debate_draw' });
         this.news.unshift({
           day: this.day,
           headline: 'Both candidates deliver mixed debate performances'
@@ -881,7 +942,7 @@
         const noise      = this.rng.range(-2.5, 2.5);
         // GOTV turnout boost nudges final vote share
         const turnoutAdj = Math.min(4, (state.turnoutBoost || 0) * 0.4);
-        const playerPct  = Math.max(25, Math.min(75, state.playerSupport + noise + turnoutAdj));
+        const playerPct  = Math.max(5, Math.min(95, state.playerSupport + noise + turnoutAdj));
         const oppPct     = 100 - playerPct;
 
         const demPct  = isDemPlayer ? playerPct : oppPct;
@@ -943,7 +1004,7 @@
 
         const noiseFactor = Math.max(0, 1 - ed.reportingPct / 100) * 2.5;
         const noise       = this.rng.range(-noiseFactor, noiseFactor);
-        const appDemPct   = Math.max(30, Math.min(70, ed.demPct + noise + mirageBias));
+        const appDemPct   = Math.max(5, Math.min(95, ed.demPct + noise + mirageBias));
         const appRepPct   = 100 - appDemPct;
 
         // Store for UI — ElectionNight reads this each tick
