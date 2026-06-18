@@ -86,14 +86,14 @@
                 <div class="ap-sat-bar" style="display:none"></div>
                 <div class="ap-btn-inner">
                   <span class="ap-btn-top"><span class="ap-btn-scope">🌐</span><span class="ap-btn-name">Grassroots</span></span>
-                  <span class="ap-btn-cost">free · +👥</span>
+                  <span class="ap-btn-cost">free · 1 slot · +👥</span>
                 </div>
               </button>
               <button class="ap-btn ap-btn-develop" id="ap-donor-dinner" disabled>
                 <div class="ap-sat-bar" style="display:none"></div>
                 <div class="ap-btn-inner">
                   <span class="ap-btn-top"><span class="ap-btn-scope">🌐</span><span class="ap-btn-name">Donor Dinner</span></span>
-                  <span class="ap-btn-cost">5⚡ · +capital</span>
+                  <span class="ap-btn-cost">5⚡ · 1 slot · +⚡</span>
                 </div>
               </button>
             </div>
@@ -406,18 +406,35 @@
       }
 
       // Fundraise
+      const noSlotsFR = (g.dailyActionsUsed || 0) >= (g.dailyActionLimit || 3);
       const gf = document.getElementById('ap-grassroots-fundraise');
       if (gf) {
-        gf.disabled = false;
-        gf.title = 'Free fundraise — scales with volunteers. Slight working-class boost.';
+        gf.disabled = noSlotsFR;
+        gf.title = noSlotsFR
+          ? 'No action slots remaining today'
+          : 'Free fundraise — scales with volunteers. Slight working-class boost. Uses 1 slot.';
+        const gfSat = g.actionSaturation?.['fundraiseGrassroots'] || 0;
+        const gfBar = gf.querySelector('.ap-sat-bar');
+        if (gfBar) {
+          gfBar.style.display = gfSat > 0 ? 'block' : 'none';
+          gfBar.style.width   = `${gfSat}%`;
+        }
       }
       const dd = document.getElementById('ap-donor-dinner');
       if (dd) {
         const cap = g.player?.resources?.politicalCapital || 0;
-        dd.disabled = cap < 5;
-        dd.title = cap < 5
-          ? 'Need 5 political capital to arrange'
-          : 'High-yield fundraiser. Costs 5⚡, slight working-class hit.';
+        dd.disabled = cap < 5 || noSlotsFR;
+        dd.title = noSlotsFR
+          ? 'No action slots remaining today'
+          : cap < 5
+            ? 'Need 5 political capital to arrange'
+            : 'High-yield fundraiser. Costs 5⚡, slight working-class hit. Uses 1 slot.';
+        const ddSat = g.actionSaturation?.['fundraiseDonorDinner'] || 0;
+        const ddBar = dd.querySelector('.ap-sat-bar');
+        if (ddBar) {
+          ddBar.style.display = ddSat > 0 ? 'block' : 'none';
+          ddBar.style.width   = `${ddSat}%`;
+        }
       }
 
       // Capital action buttons
