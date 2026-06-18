@@ -4,6 +4,7 @@
 
   const ENDORSERS = E.data.ENDORSERS;
 
+
   // Pool of state-level event definitions
   const STATE_EVENTS = [
     {
@@ -115,6 +116,40 @@
     _availableEndorsers() {
       const earned = this.game.endorsements || [];
       return ENDORSERS.filter(e => !earned.find(x => x.name === e.name));
+    }
+
+    // Returns a score in [-1, +1]: how well-aligned the player is with this endorser.
+    // Positive = endorser leans toward player; negative = leans toward opponent.
+    _endorsementScore(endorser) {
+      const g   = this.game;
+      const isDem = g.player?.party === 'Democrat';
+
+      // ── Lean alignment ───────────────────────────────────────
+      // liberal/center_left lean toward Dem; conservative/center_right toward Rep
+      const leanScores = { liberal: 1, center_left: 0.5, centrist: 0, center_right: -0.5, conservative: -1 };
+      const rawLean    = leanScores[endorser.lean ?? 'centrist'] ?? 0;
+      // Flip sign for Republican player (positive score = good for player)
+      const leanScore  = isDem ? rawLean : -rawLean;
+
+      // ── Position matching ────────────────────────────────────
+      const playerPositions  = g.issuePositions || {};
+      const endorserPositions = endorser.positions || {};
+      const issues = Object.keys(endorserPositions);
+
+      let posScore = 0;
+      if (issues.length > 0) {
+        for (const issue of issues) {
+          const endorserStance = endorserPositions[issue]; // 'conservative' | 'liberal'
+          const playerStance   = playerPositions[issue] ?? 'centrist';
+          if (playerStance === endorserStance)    posScore += 1;
+          else if (playerStance === 'centrist')   posScore += 0.2;  // mild alignment
+          else                                    posScore -= 1;    // directly opposing
+        }
+        posScore /= issues.length; // normalise to [-1, +1]
+      }
+
+      // Lean weighted 60%, positions 40% — lean is the primary signal
+      return leanScore * 0.6 + posScore * 0.4;
     }
 
     // ── Scheduling ───────────────────────────────────────────────
@@ -251,46 +286,52 @@
       }
 
       const endorser = this._pick(available);
+      const score    = this._endorsementScore(endorser); // -1 (opposes player) to +1 (favours player)
       const roll     = this.game.rng.next();
 
-      if (roll < 0.55) {
-        // Player gets endorsed (majority case)
+      // Base thresholds shift ±25pp based on alignment score
+      // score = +1 → player 80%, opp 15%, decline 5%
+      // score =  0 → player 55%, opp 25%, decline 20%
+      // score = -1 → player 30%, opp 45%, decline 25%
+      const playerThresh = Math.max(0.10, Math.min(0.85, 0.55 + score * 0.25));
+      const oppThresh    = playerThresh + Math.max(0.05, 0.25 - Math.abs(score) * 0.10);
+
+      if (roll < playerThresh) {
         this._applyEndorser(endorser, ctx);
-      } else if (roll < 0.80) {
-        // Opponent gets endorsed — player loses coalition support
-        const g      = this.game;
-        const opp    = g.opponents?.[0];
+      } else if (roll < oppThresh) {
+        const g       = this.game;
+        const opp     = g.opponents?.[0];
         const oppName = opp?.name ?? 'the opposition';
         const stateStr = endorser.state ? ` in ${g.getStateByAbbr(endorser.state)?.name ?? endorser.state}` : '';
         const headlines = {
-          union: [`${endorser.name} breaks with ${ctx.name}, backs ${oppName}${stateStr}`],
-          paper: [`${endorser.name} editorial board endorses ${oppName}${stateStr}`],
-          org:   [`${endorser.name} endorses ${oppName} instead${stateStr}`]
+          union: [`${endorser.name} breaks with ${ctx.name}, backs ${oppName}${stateStr}`,
+                  `${endorser.name} withholds support from ${ctx.name}, endorses ${oppName}${stateStr}`],
+          paper: [`${endorser.name} editorial board endorses ${oppName}${stateStr}`,
+                  `${endorser.name} backs ${oppName} in surprise editorial${stateStr}`],
+          org:   [`${endorser.name} endorses ${oppName} instead${stateStr}`,
+                  `${endorser.name} snubs ${ctx.name}, backs ${oppName}${stateStr}`]
         };
         g.news.unshift({ day: g.day, headline: this._pick(headlines[endorser.type] ?? headlines.org) });
-        // Mark as used so it can't endorse player later
         g.endorsements = g.endorsements || [];
         g.endorsements.push({ ...endorser, opponent: true });
-        // Penalty: coalition shifts against player
         g.getCoalition(endorser.coalition)?.adjustSupport(-(endorser.boost * 0.6));
         if (opp) opp.resources.momentum = Math.min(100, (opp.resources.momentum || 50) + 3);
-        g.log.push(`Endorsement: ${endorser.name} → opponent`);
+        g.log.push(`Endorsement: ${endorser.name} → opponent (score ${score.toFixed(2)})`);
         g.journalEvents = g.journalEvents || [];
         g.journalEvents.push({ day: g.day, type: 'opponent_endorsement', who: endorser.name, coalition: endorser.coalition });
         g.stateSupportEngine?.updateAllStates();
       } else {
-        // Refusal to endorse — neutral, minor goodwill loss
         const g = this.game;
         const headlines = [
           `${endorser.name} declines to endorse either presidential candidate`,
           `${endorser.name} sits out the presidential race — no endorsement issued`,
-          `${endorser.name} refuses to back ${ctx.name} or ${g.opponents?.[0]?.name ?? 'the opponent'}`
+          `${endorser.name} refuses to back ${ctx.name} or ${g.opponents?.[0]?.name ?? 'the opponent'}`,
+          `${endorser.name} announces it will not make a presidential endorsement this cycle`
         ];
         g.news.unshift({ day: g.day, headline: this._pick(headlines) });
-        // Mark as used; no coalition effect
         g.endorsements = g.endorsements || [];
         g.endorsements.push({ ...endorser, declined: true });
-        g.log.push(`Endorsement: ${endorser.name} → declined`);
+        g.log.push(`Endorsement: ${endorser.name} → declined (score ${score.toFixed(2)})`);
       }
     }
 
