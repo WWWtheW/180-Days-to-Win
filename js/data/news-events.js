@@ -65,6 +65,17 @@ window.ElectionSim.data.NEWS_EVENTS = {
     'Turnout machinery fires up for {name} in key state {state}',
   ],
 
+  communityOutreach: [
+    '{name} meets with community leaders in {state}',
+    '{name} holds listening session in {state}\'s minority communities',
+    '{name} visits cultural centers across {state}',
+    '{name} builds coalition support through grassroots outreach in {state}',
+    '{name} meets with faith and civic leaders in {state}',
+    '{name} expands community engagement efforts in {state}',
+    '{name} hosts roundtable with local organizers in {state}',
+    '{name} deepens ties with diverse communities in {state}',
+  ],
+
   // ── AIR — STATE ─────────────────────────────────────────────────────────────
 
   tvAds: [
@@ -199,6 +210,58 @@ window.ElectionSim.data.NEWS_EVENTS = {
     '{name} intensifies national campaign effort',
     '{name} campaign ramps up ground operation',
     '{name} boosts nationwide outreach',
+  ],
+
+  // ── PRESS CONFERENCES ────────────────────────────────────────────────────────
+  // Keyed by topic label (lowercased, spaces→underscores) from PRESS_CONFERENCE_TOPICS.
+
+  press_economic_vision: [
+    '{name} lays out economic vision at press conference',
+    '{name} faces tough questions on the economy at press briefing',
+    '{name} unveils economic agenda before assembled press',
+    'Reporters press {name} on economic plans at news conference',
+  ],
+
+  press_healthcare_commitment: [
+    '{name} reaffirms healthcare commitment at press conference',
+    '{name} faces healthcare questions head-on before reporters',
+    '{name} doubles down on healthcare platform in press briefing',
+  ],
+
+  press_national_security: [
+    '{name} projects strength on national security at press conference',
+    '{name} fields foreign policy questions from assembled press',
+    '{name} addresses national security concerns in press briefing',
+  ],
+
+  press_climate_energy: [
+    '{name} outlines climate agenda at press conference',
+    '{name} takes questions on energy policy from reporters',
+    '{name} defends climate plan before the press corps',
+  ],
+
+  press_immigration_border: [
+    '{name} addresses immigration policy at tense press conference',
+    'Reporters grill {name} on border policy specifics',
+    '{name} clarifies immigration stance before assembled media',
+  ],
+
+  press_education_youth: [
+    '{name} champions education agenda at press conference',
+    '{name} fields student debt questions from reporters',
+    '{name} unveils education plan before the press',
+  ],
+
+  press_jobs_workers: [
+    '{name} speaks directly to workers at press conference',
+    '{name} addresses jobs and trade questions from reporters',
+    '{name} makes pitch to working families before assembled press',
+  ],
+
+  press_democracy_rule_of_law: [
+    '{name} addresses democracy and rule of law at press conference',
+    '{name} draws sharp contrast on judicial independence before reporters',
+    '{name} fields pointed questions on democratic norms',
   ],
 
 };
