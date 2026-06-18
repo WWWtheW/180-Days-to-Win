@@ -4,7 +4,6 @@
 
   const ENDORSERS = E.data.ENDORSERS;
 
-
   // Pool of state-level event definitions
   const STATE_EVENTS = [
     {
@@ -33,6 +32,15 @@
       coalitionEffects: { working_class: 1, minority: -2, rural: 2 },
       newsType: 'event',
       note: 'immigration debate intensifies in {{state}}'
+    },
+    {
+      id: 'redistricting_ruling',
+      statePool: ['GA','MI','NC','PA','VA'],
+      headline: (s) => `Court ruling reshapes ${s.name}'s congressional districts`,
+      issueBoost: 'social_issues',
+      coalitionEffects: { minority: 3, young: 1 },
+      newsType: 'event',
+      note: 'redistricting fallout continues in {{state}}'
     },
     {
       id: 'healthcare_crisis',
@@ -289,12 +297,19 @@
       const score    = this._endorsementScore(endorser); // -1 (opposes player) to +1 (favours player)
       const roll     = this.game.rng.next();
 
-      // Base thresholds shift ±25pp based on alignment score
+      // Difficulty bias: opponentDifficulty values are 1.4 (easy) / 1.1 (normal) / 0.85 (hard) —
+      // lower value = tougher opponent. Hard mode nudges endorsements toward the opponent;
+      // easy mode nudges them toward the player. Normal (1.1) applies no bias.
+      const diffVal       = this.game.opponentDifficulty ?? 1.1;
+      const difficultyBias = (diffVal - 1.1) * 0.5; // easy: +0.15, normal: 0, hard: -0.125
+      const adjScore      = Math.max(-1, Math.min(1, score + difficultyBias));
+
+      // Base thresholds shift ±25pp based on alignment score (now difficulty-adjusted)
       // score = +1 → player 80%, opp 15%, decline 5%
       // score =  0 → player 55%, opp 25%, decline 20%
       // score = -1 → player 30%, opp 45%, decline 25%
-      const playerThresh = Math.max(0.10, Math.min(0.85, 0.55 + score * 0.25));
-      const oppThresh    = playerThresh + Math.max(0.05, 0.25 - Math.abs(score) * 0.10);
+      const playerThresh = Math.max(0.10, Math.min(0.85, 0.55 + adjScore * 0.25));
+      const oppThresh    = playerThresh + Math.max(0.05, 0.25 - Math.abs(adjScore) * 0.10);
 
       if (roll < playerThresh) {
         this._applyEndorser(endorser, ctx);
@@ -316,7 +331,7 @@
         g.endorsements.push({ ...endorser, opponent: true });
         g.getCoalition(endorser.coalition)?.adjustSupport(-(endorser.boost * 0.6));
         if (opp) opp.resources.momentum = Math.min(100, (opp.resources.momentum || 50) + 3);
-        g.log.push(`Endorsement: ${endorser.name} → opponent (score ${score.toFixed(2)})`);
+        g.log.push(`Endorsement: ${endorser.name} → opponent (score ${score.toFixed(2)}, adj ${adjScore.toFixed(2)})`);
         g.journalEvents = g.journalEvents || [];
         g.journalEvents.push({ day: g.day, type: 'opponent_endorsement', who: endorser.name, coalition: endorser.coalition });
         g.stateSupportEngine?.updateAllStates();
@@ -331,7 +346,7 @@
         g.news.unshift({ day: g.day, headline: this._pick(headlines) });
         g.endorsements = g.endorsements || [];
         g.endorsements.push({ ...endorser, declined: true });
-        g.log.push(`Endorsement: ${endorser.name} → declined (score ${score.toFixed(2)})`);
+        g.log.push(`Endorsement: ${endorser.name} → declined (score ${score.toFixed(2)}, adj ${adjScore.toFixed(2)})`);
       }
     }
 
