@@ -185,6 +185,11 @@
     }
 
     _skipToEnd() {
+      if (!this.game.electionNight.active) {
+        // Election already fully concluded (all states called) — reopen the final results
+        if (this.resultScreen) this.resultScreen.classList.add('en-visible');
+        return;
+      }
       this._stop();
       let safety = 0;
       while (this.game.electionNight.active && safety++ < 500) this.game.tickElectionNight();
@@ -366,6 +371,10 @@
       if (this.game.journal) {
         this.game.journal.addElectionEntry({ winner, demEV, repEV, playerWon });
       }
+
+      // Election fully concluded (all states called) — repurpose the skip button
+      const skipBtn = this.overlay.querySelector('#en-skip-btn');
+      if (skipBtn) skipBtn.textContent = '🏆 View Final Results';
 
       this.resultScreen.classList.add('en-visible');
     }
