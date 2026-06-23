@@ -58,6 +58,7 @@
       this.activeEvents = [];
       this.endorsements = [];   // { name, type, coalition, boost, state, policies }
       this.superPAC = new E.SuperPAC(this);
+      this.opponentPAC = new E.OpponentSuperPAC(this);
       this.issuePositions = {};
       this.activeSurrogates = [];  // [{ stateAbbr, stateName, daysRemaining, dailyBoost }]
 
@@ -477,6 +478,14 @@
       const r   = this.player?.resources;
       const opp = this.opponents?.[0];
       if (!r || (r.politicalCapital || 0) < 25 || !opp) return false;
+
+      // Now specifically responds to a live opponent attack ad — not a generic
+      // "hurt opponent momentum" button. counterSpin handles YOUR scandals;
+      // rapidResponse handles THEIR attacks against you.
+      const attacks = this.activeEvents.filter(e => e.type === 'opponent_attack_ad');
+      if (!attacks.length) return false;
+      const attack = attacks[attacks.length - 1]; // most recent attack ad
+
       r.politicalCapital -= 25;
 
       // Risk/reward roll scaled by politicalInstinct — can succeed big, land
@@ -487,20 +496,27 @@
       const roll = this.rng.next();
 
       if (roll < successChance) {
+        attack.remaining = Math.max(0, attack.remaining - 4); // shuts the story down fast
         opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 14);
         r.momentum = Math.min(100, (r.momentum || 50) + 5);
         this.news.unshift({ day: this.day, headline: `${this.player.name} rapid response team decisively neutralises ${opp.name} attack` });
         this.log.push('Rapid response: success');
       } else if (roll < 1 - backfireChance) {
+        attack.remaining = Math.max(0, attack.remaining - 1); // takes the edge off, story lingers a bit
         opp.resources.momentum = Math.max(0, (opp.resources.momentum || 50) - 6);
         r.momentum = Math.min(100, (r.momentum || 50) + 1);
         this.news.unshift({ day: this.day, headline: `${this.player.name} campaign pushes back against ${opp.name} attack` });
         this.log.push('Rapid response: partial effect');
       } else {
+        attack.remaining = Math.min(8, attack.remaining + 2); // backfire keeps the story alive longer
         opp.resources.momentum = Math.min(100, (opp.resources.momentum || 50) + 2);
         r.momentum = Math.max(0, (r.momentum || 50) - 4);
         this.news.unshift({ day: this.day, headline: `${this.player.name}'s rapid response widely mocked as tone-deaf` });
         this.log.push('Rapid response: backfired');
+      }
+
+      if (attack.remaining <= 0) {
+        this.activeEvents = this.activeEvents.filter(e => e !== attack);
       }
       return true;
     }
@@ -897,6 +913,7 @@
       });
 
       this.superPAC.tick();
+      this.opponentPAC.tick();
 
       // Expire state news badges older than 5 days
       if (this.stateNews) {
@@ -1039,6 +1056,10 @@
               this.news.unshift({ day: this.day, headline: `Bombshell investigation rocks ${this.player.name} campaign` });
             }
           }
+        }
+
+        if (event.type === 'opponent_attack_ad' && event.remaining <= 0) {
+          event.resolved = true;
         }
 
         if (event.type === 'opponent_scandal') {

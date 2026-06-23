@@ -40,6 +40,20 @@
   border: 1px solid #1f2937;
 }
 
+#poll-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.poll-item {
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 0;
+  border-bottom: 1px solid #1f2937;
+}
+.poll-item:last-child { border-bottom: none; }
+
 button {
   background: #2563eb;
   color: white;

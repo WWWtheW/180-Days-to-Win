@@ -104,6 +104,9 @@
         day:      this.game.day,
         headline: `${this.candidate.name} launches attack ads against ${this.game.player.name}`
       });
+      // Creates a short response window — this is what Rapid Response actually
+      // targets, distinguishing it from counterSpin (which defuses YOUR scandals).
+      this.game.activeEvents.push({ type: 'opponent_attack_ad', remaining: 4 });
     }
 
     execute(actionKey) {

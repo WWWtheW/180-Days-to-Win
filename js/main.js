@@ -108,7 +108,7 @@
 
     // ── Polls ──────────────────────────────────────────────────────
     document.getElementById('poll-list').innerHTML =
-      game.polling.polls.map(p => `
+      game.polling.polls.slice(0, 8).map(p => `
         <div class="poll-item">
           <b>${p.pollster}</b><br>
           Day ${p.day}<br>

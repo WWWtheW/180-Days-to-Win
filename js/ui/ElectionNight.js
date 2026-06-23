@@ -120,7 +120,7 @@
       });
       this.overlay.querySelector('#en-skip-btn').addEventListener('click', () => this._skipToEnd());
       this.overlay.querySelector('#en-result-close-btn').addEventListener('click', () => {
-        document.getElementById('en-result-screen').style.display = 'none';
+        this.resultScreen?.classList.remove('en-visible');
       });
       this.overlay.querySelector('#en-result-copy-seed').addEventListener('click', () => {
         const code = document.getElementById('en-result-seed-code').textContent;

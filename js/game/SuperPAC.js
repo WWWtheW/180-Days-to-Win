@@ -102,5 +102,57 @@
     }
   }
 
+  // Opponent SuperPAC — fully autonomous (no signal UI), spends in the closest
+  // battlegrounds. Spend rate scales with game difficulty: harder difficulty
+  // means a more aggressive opponent PAC, mirroring how opponentDifficulty
+  // already affects stat rolls and endorsement bias elsewhere.
+  class OpponentSuperPAC {
+    constructor(game) {
+      this.game = game;
+      this.fund = 400000; // starting fund, slightly below the player's PAC baseline
+    }
+
+    tick() {
+      const opp = this.game.opponents?.[0];
+      if (!opp) return;
+
+      // opponentDifficulty: 1.4 easy / 1.1 normal / 0.85 hard (lower = tougher opponent).
+      // Invert it so hard mode produces the most aggressive PAC spending.
+      const diffVal   = this.game.opponentDifficulty ?? 1.1;
+      const spendMult = Math.max(0.15, 1.6 - diffVal); // hard ≈0.75, normal ≈0.5, easy ≈0.2
+
+      // Passive fund growth — scales with the opponent's own momentum and difficulty
+      const momentumFactor = Math.max(0.3, (opp.resources.momentum || 50) / 50);
+      const dailyInflow    = Math.floor(12000 * momentumFactor * spendMult * (1 + this.game.rng.range(-0.2, 0.2)));
+      this.fund += dailyInflow;
+
+      if (this.fund < 60000) return; // not worth deploying yet
+
+      // Autonomous spend in the closest battlegrounds — opponent PAC doesn't
+      // "signal," it just acts in its own interest every day.
+      const targets = [...this.game.states]
+        .sort((a, b) => Math.abs(a.playerSupport - 50) - Math.abs(b.playerSupport - 50))
+        .slice(0, 4);
+      if (!targets.length) return;
+
+      const budget = Math.floor(this.fund * 0.05 * spendMult);
+      this.fund   -= budget;
+      const perState = budget / targets.length;
+
+      targets.forEach(state => {
+        state.aiPressure = Math.min(10, (state.aiPressure || 0) + (perState / 300000) * 0.8);
+      });
+
+      // Occasional news visibility, not every day
+      if (this.game.rng.next() < 0.05) {
+        this.game.news.unshift({
+          day: this.game.day,
+          headline: `Outside groups aligned with ${opp.name} ramp up ad spending in key states`
+        });
+      }
+    }
+  }
+
   E.SuperPAC = SuperPAC;
+  E.OpponentSuperPAC = OpponentSuperPAC;
 })();

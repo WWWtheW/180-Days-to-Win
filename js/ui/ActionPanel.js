@@ -463,9 +463,10 @@
       const cmBar = document.getElementById('ap-capitol-meeting')?.querySelector('.ap-sat-bar');
       if (cmBar) { cmBar.style.display = cmSat > 0 ? 'block' : 'none'; cmBar.style.width = `${cmSat}%`; }
 
-      capBtn('ap-counter-spin',   20, hasEvents, 'No active scandals to counter');
+      capBtn('ap-counter-spin',   20, hasEvents, 'No active scandal to counter');
       capBtn('ap-party-rally',    15, left > 0,  'No action slots remaining');
-      capBtn('ap-rapid-response', 25, !!opp,     'No opponent to target');
+      const hasAttackAd = (g.activeEvents || []).some(e => e.type === 'opponent_attack_ad');
+      capBtn('ap-rapid-response', 25, hasAttackAd, 'No active opponent attack to respond to');
       capBtn('ap-poll-analyst', 25, !g.pollAnalystActive, g.pollAnalystActive ? `Active (${g.pollAnalystDays}d left)` : null);
 
       // Show suppress button only when investigation is active
