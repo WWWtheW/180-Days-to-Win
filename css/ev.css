@@ -1,6 +1,7 @@
 #ev-container {
   width: 95%;
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 #ev-bar-wrapper {

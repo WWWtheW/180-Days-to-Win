@@ -118,13 +118,6 @@
             <div class="ap-btn-grid" id="ap-archetype-grid"></div>
 
             <div class="ap-divider"></div>
-            <button class="journal-open-btn" id="ap-journal-btn">📓 Campaign Journal</button>
-
-            <div class="ap-seed-row">
-              <span class="ap-seed-code" id="ap-seed-code">—</span>
-              <button class="ap-seed-copy" id="ap-seed-copy">Copy seed</button>
-            </div>
-            <div class="ap-divider"></div>
             <button class="ap-end-day" id="ap-end-day">End Day →</button>
           </div>
 
@@ -246,24 +239,6 @@
 
         if (e.target.id === 'ap-pac-signal') {
           this._showPicker('SUPERPAC');
-          return;
-        }
-
-        // Journal
-        if (e.target.id === 'ap-journal-btn') {
-          this.game.journal?.open();
-          return;
-        }
-
-        // Seed copy
-        if (e.target.id === 'ap-seed-copy') {
-          const code = this.game.getSeedString?.() || '';
-          if (code) {
-            navigator.clipboard.writeText(code).then(() => {
-              const btn = document.getElementById('ap-seed-copy');
-              if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy seed'; btn.classList.remove('copied'); }, 1500); }
-            });
-          }
           return;
         }
 
@@ -572,14 +547,6 @@
             : status === 'no_capital' ? 'Not enough political capital'
             : `${g.actions[key]?.name} — your archetype ability`;
         });
-      }
-
-      // Seed display
-      const seedEl = document.getElementById('ap-seed-code');
-      if (seedEl) {
-        const str = g.getSeedString?.() || '—';
-        seedEl.textContent = str.length > 22 ? str.slice(0, 22) + '…' : str;
-        seedEl.title = str;
       }
     }
   }

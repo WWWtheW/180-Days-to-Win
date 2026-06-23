@@ -49,6 +49,39 @@
         <div id="resources-info"></div>
       </div>`;
 
+    document.getElementById('journal-seed-panel').innerHTML = `
+      <div class="panel">
+        <button class="journal-open-btn" id="ap-journal-btn">📓 Campaign Journal</button>
+        <div class="ap-seed-row">
+          <span class="ap-seed-code" id="ap-seed-code">—</span>
+          <button class="ap-seed-copy" id="ap-seed-copy">Copy seed</button>
+        </div>
+      </div>`;
+
+    document.getElementById('ap-journal-btn').addEventListener('click', () => {
+      game.journal?.open();
+    });
+    document.getElementById('ap-seed-copy').addEventListener('click', () => {
+      const code = game.getSeedString?.() || '';
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('ap-seed-copy');
+        if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy seed'; btn.classList.remove('copied'); }, 1500); }
+      });
+    });
+
+    // News ticker has no visible scrollbar — let vertical mouse-wheel /
+    // trackpad scroll translate into horizontal movement instead.
+    const tickerTrack = document.getElementById('news-ticker-track');
+    if (tickerTrack) {
+      tickerTrack.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          tickerTrack.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
+
     // #action-panel is left EMPTY here — ActionPanel fills it after renderUI()
 
     document.getElementById('polling-panel').innerHTML = `
@@ -59,12 +92,6 @@
       <div class="panel">
         <b>Coalitions</b>
         <div id="coalition-view"></div>
-      </div>`;
-
-    document.getElementById('news-panel').innerHTML = `
-      <div class="panel">
-        <b>News</b>
-        <div id="news-feed"></div>
       </div>`;
 
     document.getElementById('battleground-panel').innerHTML = `
@@ -102,6 +129,15 @@
       <p>👥 Volunteers: ${Math.floor(r.volunteers || 0).toLocaleString()}</p>
       <p>⚡ Pol. Capital: ${Math.round(r.politicalCapital || 0)}</p>`;
 
+    // ── Seed display — refreshed here since issue positions (part of the
+    // encoded seed string) can change mid-game ──────────────────────
+    const seedEl = document.getElementById('ap-seed-code');
+    if (seedEl) {
+      const str = game.getSeedString?.() || '—';
+      seedEl.textContent = str.length > 22 ? str.slice(0, 22) + '…' : str;
+      seedEl.title = str;
+    }
+
     // ── Coalitions ─────────────────────────────────────────────────
     document.getElementById('coalition-view').innerHTML =
       game.coalitions.map(c => `<p>${c.name}: ${c.support.player.toFixed(1)}%</p>`).join('');
@@ -120,9 +156,11 @@
     document.getElementById('battleground-view').innerHTML =
       battlegrounds.map(s => `<p>${s.abbr} (${s.playerSupport.toFixed(1)}%)</p>`).join('');
 
-    // ── News ───────────────────────────────────────────────────────
-    document.getElementById('news-feed').innerHTML =
-      game.news.slice(0, 10).map(n => `<p>Day ${n.day}: ${n.headline}</p>`).join('');
+    // ── News ticker (bottom bar) ─────────────────────────────────────
+    document.getElementById('news-ticker-content').innerHTML =
+      game.news.slice(0, 15).map(n =>
+        `<span class="ticker-item">Day ${n.day}: ${n.headline}</span>`
+      ).join('<span class="ticker-sep">●</span>');
 
     // ── Map ────────────────────────────────────────────────────────
     map.update();
