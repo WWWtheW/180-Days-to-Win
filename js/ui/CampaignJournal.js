@@ -67,7 +67,15 @@
       const opp        = g.opponents?.[0];
       const momentum   = g.player?.resources?.momentum ?? 50;
       const polls      = g.polling?.polls || [];
-      const lastPoll   = polls[polls.length - 1];
+      // Use the poll closest to THIS week's end — not the globally most-recent poll —
+      // so past weeks reflect standing at the time, not the player's current standing.
+      const pollsByThisWeek = polls.filter(p => p.day <= endDay);
+      // polls[] is stored newest-first (PollingEngine uses unshift), so after
+      // filtering, index 0 is the most recent poll at/before this week's end —
+      // NOT length-1, which would grab the oldest (often the very first poll
+      // of the whole game). This was the actual cause of "consolidating
+      // momentum" text appearing on weeks where the player was clearly behind.
+      const lastPoll   = pollsByThisWeek.length ? pollsByThisWeek[0] : null;
       const trailing   = lastPoll ? lastPoll.player < 50 : false;
 
       return {

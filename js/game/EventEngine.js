@@ -4,6 +4,7 @@
 
   const ENDORSERS = E.data.ENDORSERS;
 
+
   // Pool of state-level event definitions
   const STATE_EVENTS = [
     {
@@ -160,6 +161,30 @@
       return leanScore * 0.6 + posScore * 0.4;
     }
 
+    vpControversy() {
+      const g  = this.game;
+      const vp = g.player?.vp;
+      if (!vp) return;
+      // One controversy per running mate per campaign — not a repeating drain.
+      if (vp.controversyUsed) return;
+      vp.controversyUsed = true;
+
+      const headlines = [
+        `${vp.name} faces questions over past business dealings`,
+        `Old comments from ${vp.name} resurface, draw criticism`,
+        `${vp.name}'s record under scrutiny after opposition research drop`,
+        `Reporters dig into ${vp.name}'s past votes and statements`
+      ];
+      const headline = this._pick(headlines);
+      g.news.unshift({ day: g.day, headline });
+
+      g.player.resources.momentum = Math.max(0, (g.player.resources.momentum || 50) - 5);
+      g.getCoalition(vp.coalition)?.adjustSupport(-(vp.boost * 0.4));
+      g.log.push(`VP controversy: ${vp.name}`);
+      g.journalEvents = g.journalEvents || [];
+      g.journalEvents.push({ day: g.day, type: 'vp_controversy', name: vp.name });
+    }
+
     // ── Scheduling ───────────────────────────────────────────────
 
     maybeTriggerEvent() {
@@ -186,7 +211,14 @@
         { fn: this.opponentScandal.bind(this),         weight: 1.5 },
         { fn: this.investigativeJournalism.bind(this), weight: ctx.daysLeft > 40 ? 1.5 : 0 },
       ];
-      if (ctx.daysLeft < 30) weights.push({ fn: this.octoberSurprise.bind(this), weight: 6 });
+      if (ctx.daysLeft < 30 && !this.game.octoberSurpriseUsed) {
+        weights.push({ fn: this.octoberSurprise.bind(this), weight: 6 });
+      }
+      // VP "risk" rating now has a real consequence — Med-risk picks carry an
+      // ongoing chance of a running-mate controversy; Low-risk picks never do.
+      if (this.game.player?.vp?.risk === 'Med') {
+        weights.push({ fn: this.vpControversy.bind(this), weight: 1.5 });
+      }
       return this.weightedPick(weights);
     }
 
@@ -447,6 +479,8 @@
     // ── OPPONENT SCANDAL ─────────────────────────────────────────
 
     opponentScandal() {
+      // Don't open a second amplify/ignore window while one is still pending.
+      if (this.game.activeEvents.some(e => e.type === 'opponent_scandal')) return;
       const opp = this.game.opponents?.[0];
       if (!opp) return;
       const headlines = [
@@ -467,6 +501,9 @@
     // ── INVESTIGATIVE JOURNALISM ─────────────────────────────────
 
     investigativeJournalism() {
+      // Don't stack a second investigation on top of an active one — was causing
+      // double damage accumulation per day when both ticked in processEvents().
+      if (this.game.activeEvents.some(e => e.type === 'investigation')) return;
       const ctx = this._ctx();
       this.game.activeEvents.push({
         type: 'investigation', remaining: 5, damage: 0, suppressed: false, dayStarted: this.game.day
@@ -501,6 +538,7 @@
       const g   = this.game;
       const ctx = this._ctx();
       const opp = g.opponents?.[0];
+      g.octoberSurpriseUsed = true; // one-time campaign-defining event — never fires twice
 
       const pool = [
         // Hits the player
@@ -557,14 +595,44 @@
         {
           targetPlayer: null,
           headline: 'Foreign policy crisis erupts — both campaigns forced to stake a position',
-          effects() {
-            g.player.resources.momentum -= 4;
-            if (opp) opp.resources.momentum -= 3;
-            g.states.forEach(s => {
-              if ((s.issueWeights?.foreign_policy || 0) > 0.65) {
-                s.playerCampaignBoost = (s.playerCampaignBoost || 0) - 1.5;
+          isChoice: true,
+          choices: [
+            { label: 'Hawkish Response',  desc: 'Call for strong, decisive action.',              tag: 'Suburban/independent gain if it holds · backfires if seen as reckless' },
+            { label: 'Cautious Response', desc: 'Urge diplomacy and restraint.',                   tag: 'Young/college gain if well-received · risk of a "weak" narrative' },
+            { label: 'Defer to Experts',  desc: 'Avoid staking a strong position, point to briefings.', tag: 'Safe but unsatisfying — small momentum hit regardless' }
+          ],
+          applyChoice(i) {
+            const experience = g.player.stats?.experience ?? 50;
+            const charisma   = g.player.stats?.charisma ?? 50;
+            if (i === 0) {
+              const holds = g.rng.next() < (0.40 + experience / 250);
+              if (holds) {
+                g.player.resources.momentum += 3;
+                g.getCoalition('suburban')?.adjustSupport(2);
+                g.getCoalition('independent')?.adjustSupport(2);
+                g.news.unshift({ day: g.day, headline: `${g.player.name}'s firm stance on the crisis seen as decisive leadership` });
+              } else {
+                g.player.resources.momentum -= 6;
+                g.getCoalition('young')?.adjustSupport(-1);
+                g.news.unshift({ day: g.day, headline: `${g.player.name}'s hawkish rhetoric criticised as reckless amid crisis` });
               }
-            });
+            } else if (i === 1) {
+              const wellReceived = g.rng.next() < (0.40 + charisma / 250);
+              if (wellReceived) {
+                g.player.resources.momentum += 3;
+                g.getCoalition('young')?.adjustSupport(2);
+                g.getCoalition('college')?.adjustSupport(2);
+                g.news.unshift({ day: g.day, headline: `${g.player.name}'s call for diplomacy resonates amid crisis` });
+              } else {
+                g.player.resources.momentum -= 5;
+                g.getCoalition('rural')?.adjustSupport(-1);
+                g.news.unshift({ day: g.day, headline: `${g.player.name} branded "weak on the world stage" after crisis response` });
+              }
+            } else {
+              g.player.resources.momentum -= 2;
+              g.news.unshift({ day: g.day, headline: `${g.player.name} defers to briefings, avoids staking out a position on crisis` });
+            }
+            if (opp) opp.resources.momentum += g.rng.range(-3, 3);
           },
           label: 'Foreign Crisis', duration: 10
         },
@@ -584,12 +652,26 @@
 
       const chosen = this._pick(pool);
       g.activeEvents.push({ type: 'october_surprise', label: chosen.label, remaining: chosen.duration });
-      chosen.effects();
-      g.player.resources.momentum = Math.max(0, Math.min(100, g.player.resources.momentum));
       g.news.unshift({ day: g.day, headline: this._fill(chosen.headline, ctx) });
       g.log.push(`October surprise: ${chosen.label} (targets: ${chosen.targetPlayer === true ? 'player' : chosen.targetPlayer === false ? 'opponent' : 'both'})`);
       g.journalEvents = g.journalEvents || [];
       g.journalEvents.push({ day: g.day, type: 'october_surprise', label: chosen.label });
+
+      if (chosen.isChoice) {
+        E.ChoiceModal.show({
+          tag: '🌍 OCTOBER SURPRISE',
+          title: this._fill(chosen.headline, ctx),
+          subtitle: 'Your response will shape how this story plays out.',
+          choices: chosen.choices,
+          onChoice: (i) => {
+            chosen.applyChoice(i);
+            g.player.resources.momentum = Math.max(0, Math.min(100, g.player.resources.momentum));
+          }
+        });
+      } else {
+        chosen.effects();
+        g.player.resources.momentum = Math.max(0, Math.min(100, g.player.resources.momentum));
+      }
     }
   }
 

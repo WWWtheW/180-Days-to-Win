@@ -12,6 +12,17 @@
   overflow-y: auto;
 }
 
+#sidebar-pinned-top {
+  position: sticky;
+  top: -10px; /* offsets the parent's 10px padding so it sits flush at the true top */
+  z-index: 6;
+  background: #0b1220;
+  padding-top: 10px;
+  margin: -10px -10px 8px -10px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 #center-panel {
   background: #0a0f1c;
   display: flex;

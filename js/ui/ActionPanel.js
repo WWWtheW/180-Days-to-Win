@@ -446,7 +446,7 @@
       }
 
       // Capital action buttons
-      const hasEvents = (g.activeEvents?.length ?? 0) > 0;
+      const hasEvents = (g.activeEvents || []).some(e => e.type === 'scandal');
       const opp       = g.opponents?.[0];
 
       const capBtn = (id, costNeeded, extraCheck = true, tip = '') => {
@@ -463,7 +463,7 @@
       const cmBar = document.getElementById('ap-capitol-meeting')?.querySelector('.ap-sat-bar');
       if (cmBar) { cmBar.style.display = cmSat > 0 ? 'block' : 'none'; cmBar.style.width = `${cmSat}%`; }
 
-      capBtn('ap-counter-spin',   20, hasEvents, 'No active events to counter');
+      capBtn('ap-counter-spin',   20, hasEvents, 'No active scandals to counter');
       capBtn('ap-party-rally',    15, left > 0,  'No action slots remaining');
       capBtn('ap-rapid-response', 25, !!opp,     'No opponent to target');
       capBtn('ap-poll-analyst', 25, !g.pollAnalystActive, g.pollAnalystActive ? `Active (${g.pollAnalystDays}d left)` : null);

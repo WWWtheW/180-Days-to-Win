@@ -425,9 +425,10 @@
     counterSpin() {
       const r = this.player?.resources;
       if (!r || (r.politicalCapital || 0) < 20) return false;
-      if (!this.activeEvents?.length) return false;
+      const scandals = this.activeEvents.filter(e => e.type === 'scandal');
+      if (!scandals.length) return false;
       r.politicalCapital -= 20;
-      const evt = this.activeEvents[0];
+      const evt = scandals[scandals.length - 1]; // most recently triggered scandal, not the oldest
 
       // Risk/reward roll scaled by mediaSkill — no longer a guaranteed result.
       const mediaSkill   = this.player.stats?.mediaSkill ?? 50;
@@ -649,6 +650,59 @@
       if (headline) this.news.unshift({ day: this.day, headline });
     }
 
+    _checkResourceExtremes() {
+      const r = this.player?.resources;
+      if (!r) return;
+
+      // "Bought and paid for" — hoarding a war chest far beyond what's being
+      // spent draws a populist backlash. Cooldown prevents repeat spam.
+      const wealthThreshold = 5000000;
+      this._lastWealthStoryDay = this._lastWealthStoryDay || -999;
+      if ((r.money || 0) > wealthThreshold && this.day - this._lastWealthStoryDay > 14) {
+        if (this.rng.next() < 0.12) {
+          this._lastWealthStoryDay = this.day;
+          this.news.unshift({
+            day: this.day,
+            headline: `Reports highlight ${this.player.name}'s massive war chest amid affordability concerns`
+          });
+          this.player.resources.momentum = Math.max(0, (this.player.resources.momentum || 50) - 3);
+          this.getCoalition('working_class')?.adjustSupport(-1.5);
+          this.getCoalition('rural')?.adjustSupport(-1);
+          this.log.push('Resource extreme: bought-and-paid-for narrative (high money)');
+        }
+      }
+
+      // Financial trouble — running dry draws its own negative coverage,
+      // beyond simply being unable to afford pricier actions.
+      const povertyThreshold = 50000;
+      this._lastPovertyStoryDay = this._lastPovertyStoryDay || -999;
+      if ((r.money || 0) < povertyThreshold && this.day - this._lastPovertyStoryDay > 14 && this.day > 10) {
+        if (this.rng.next() < 0.15) {
+          this._lastPovertyStoryDay = this.day;
+          this.news.unshift({
+            day: this.day,
+            headline: `${this.player.name} campaign reports cash crunch, scales back operations`
+          });
+          this.player.resources.momentum = Math.max(0, (this.player.resources.momentum || 50) - 2);
+          this.log.push('Resource extreme: financial trouble narrative (low money)');
+        }
+      }
+
+      // Volunteer burnout — sitting at the volunteer cap for a long stretch
+      // without rotation produces diminishing field returns.
+      this._volunteerCapDays = (r.volunteers || 0) >= 19500
+        ? (this._volunteerCapDays || 0) + 1
+        : 0;
+      if (this._volunteerCapDays === 21) {
+        this.news.unshift({
+          day: this.day,
+          headline: `${this.player.name}'s volunteer corps shows signs of burnout after sustained mobilisation`
+        });
+        r.volunteers = Math.max(0, r.volunteers - 2000);
+        this.log.push('Resource extreme: volunteer burnout (sustained cap)');
+      }
+    }
+
     canAfford(key) {
       return this.getActionStatus(key) === 'ok';
     }
@@ -854,6 +908,9 @@
       this.stateSupportEngine.updateAllStates();
       this.processEvents();
 
+      // ── Resource extremes — hoarding or running dry both have consequences ──
+      this._checkResourceExtremes();
+
       this.polling.tick();
 
       this.events?.maybeTriggerEvent();
@@ -993,7 +1050,7 @@
               title:    `${event.oppName || 'Opponent'} scandal still in news cycle`,
               subtitle: 'You have a 24-hour window to amplify or let it fade.',
               choices: [
-                { label: 'Amplify',  desc: 'Spend capital to keep the story alive and push it further. High risk/reward.',      tag: '20⚡ · opponent -10 momentum · you +3 momentum' },
+                { label: 'Amplify',  desc: 'Spend capital to keep the story alive and push it further. High risk/reward.',      tag: '20⚡ · opponent -16 momentum if it lands · you -4 if it backfires', cost: { politicalCapital: 20 } },
                 { label: 'Ignore',   desc: 'Let it run its course. Safer — no capital cost, modest passive damage to opponent.', tag: 'free · opponent -3 momentum' }
               ],
               onChoice: (i) => {

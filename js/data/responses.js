@@ -65,8 +65,9 @@ window.ElectionSim.data.SCANDAL_RESPONSES = [
         else                  g.activeEvents.push({ type: 'scandal', remaining: 1 });
       } else if (idx === 1) {
         r.momentum -= 5;
-        const res = g.player.stats?.scandalResistance ?? 50;
-        if (res >= 55) r.momentum += 3;
+        // "wins empathy if authentic" — charisma is the better proxy for authenticity than scandal resistance
+        const charisma = g.player.stats?.charisma ?? 50;
+        if (charisma >= 55) r.momentum += 3;
         g.activeEvents.push({ type: 'scandal', remaining: 1 });
       } else {
         r.momentum -= 3;
@@ -89,7 +90,9 @@ window.ElectionSim.data.SCANDAL_RESPONSES = [
         g.activeEvents.push({ type: 'scandal', remaining: 2 });
       } else if (idx === 1) {
         r.momentum -= 4;
-        r.money = (r.money || 0) + 150000;
+        // "if base is fired up" — was previously unconditional. Now actually scales with momentum.
+        const baseFiredUp = (r.momentum || 50) >= 60;
+        r.money = (r.money || 0) + (baseFiredUp ? 150000 : 60000);
         g.activeEvents.push({ type: 'scandal', remaining: 2 });
       } else {
         r.momentum -= 3;
@@ -126,7 +129,7 @@ window.ElectionSim.data.GAFFE_RESPONSES = [
       const charisma = g.player.stats?.charisma ?? 50;
       if (idx === 0) {
         r.momentum -= 2;
-        g.activeEvents.push({ type: 'scandal', remaining: 3 });
+        g.activeEvents.push({ type: 'scandal', remaining: 1 });
       } else if (idx === 1) {
         r.momentum -= 1;
         if (charisma >= 65)  { r.momentum += 4; }

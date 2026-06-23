@@ -77,7 +77,7 @@
       this._overlay.querySelectorAll('.vp-card').forEach(card => {
         card.addEventListener('click', () => {
           const vp = this.options[parseInt(card.dataset.index)];
-          this._applyVP(vp.name, vp.state, vp.coalition, vp.boost);
+          this._applyVP(vp.name, vp.state, vp.coalition, vp.boost, vp.risk);
         });
       });
 
@@ -86,15 +86,15 @@
         const stateAbbr = this._overlay.querySelector('#vp-custom-state').value;
         const coalition = this._overlay.querySelector('#vp-custom-coalition').value;
         if (!name) return;
-        this._applyVP(name, stateAbbr, coalition, 4);
+        this._applyVP(name, stateAbbr, coalition, 4, 'Med');
       });
     }
 
-    _applyVP(name, stateAbbr, coalition, boost) {
+    _applyVP(name, stateAbbr, coalition, boost, risk = 'Low') {
       const g = this.game;
 
       // Store on player
-      g.player.vp = { name, state: stateAbbr, coalition, boost };
+      g.player.vp = { name, state: stateAbbr, coalition, boost, risk };
 
       // Coalition boost
       g.getCoalition(coalition)?.adjustSupport(boost);

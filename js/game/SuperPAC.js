@@ -39,6 +39,36 @@
         sig.daysRemaining--;
         return sig.daysRemaining > 0;
       });
+
+      // Passive independent spending — the PAC doesn't sit idle just because
+      // the player hasn't signaled. It autonomously puts a smaller share of
+      // its fund into a few close, non-signaled battlegrounds each day —
+      // real PAC behavior, just less targeted/efficient than a direct signal.
+      const signaledAbbrs = new Set(this.signals.map(s => s.stateAbbr));
+      if (this.fund > 80000) {
+        const passivePool = [...this.game.states]
+          .filter(s => !signaledAbbrs.has(s.abbr))
+          .sort((a, b) => Math.abs(a.playerSupport - 50) - Math.abs(b.playerSupport - 50))
+          .slice(0, 3); // top 3 closest non-signaled states
+
+        if (passivePool.length) {
+          const passiveBudget = Math.floor(this.fund * 0.03); // 3%/day, vs ~12%/day on a direct signal
+          this.fund -= passiveBudget;
+          const perState = passiveBudget / passivePool.length;
+          passivePool.forEach(state => {
+            // Half the per-dollar effect of a signaled buy — less-targeted, independently produced ads
+            state.playerCampaignBoost = (state.playerCampaignBoost || 0) + (perState / 300000) * 0.4;
+          });
+
+          // Occasional news mention so passive activity isn't invisible, without spamming daily
+          if (this.game.rng.next() < 0.06) {
+            this.game.news.unshift({
+              day: this.game.day,
+              headline: `Independent Super PAC spending detected in ${passivePool[0].name} and other close states`
+            });
+          }
+        }
+      }
     }
 
     // Player sends a signal — costs capital, directs PAC to a state for 5 days

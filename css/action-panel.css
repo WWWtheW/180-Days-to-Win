@@ -175,11 +175,17 @@
   color: white;
   font-size: 13px;
   font-weight: 600;
-  padding: 8px;
+  padding: 10px;
   width: 100%;
-  margin: 0;
+  margin: 10px 0 0 0;
   cursor: pointer;
   transition: background 0.12s;
+  /* Sticks to the bottom of the sidebar's scroll area so it's always
+     reachable without scrolling past every action category first. */
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  box-shadow: 0 -8px 12px -4px #0b1220;
 }
 .ap-end-day:hover { background: #1e40af; }
 

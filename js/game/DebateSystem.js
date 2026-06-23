@@ -96,7 +96,11 @@
       const opponent = this.game.opponents[0];
       if (!opponent) return { result: 'draw', topic };
 
-      const statVal      = player.stats[topic.statKey] || 50;
+      // Player's underlying debate skill now always contributes (35%), same way the
+      // opponent's score always weighs theirs — previously only 2 of 15 topics used it at all.
+      const topicVal     = player.stats[topic.statKey] || 50;
+      const debateVal    = player.stats.debate || 50;
+      const statVal      = topicVal * 0.65 + debateVal * 0.35;
       const prepBonus    = Math.min(20, this.game.debatePreparation);
       const playerScore  = statVal + prepBonus + this.game.rng.range(-12, 12);
       const oppScore     = opponent.stats.debate * 0.6 + opponent.stats.charisma * 0.4

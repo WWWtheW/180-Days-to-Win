@@ -34,17 +34,46 @@
       const grid = document.getElementById('cm-choices');
       grid.innerHTML = '';
 
+      const resources = E.state?.player?.resources || {};
+
       choices.forEach((c, i) => {
         const btn = document.createElement('button');
         btn.className = 'cm-choice';
+
+        // Choices may declare a cost, e.g. { politicalCapital: 20 } — grey out
+        // and disable if the player can't currently afford it.
+        let affordable = true;
+        let shortfallText = '';
+        if (c.cost) {
+          for (const [key, amt] of Object.entries(c.cost)) {
+            const have = resources[key] || 0;
+            if (have < amt) {
+              affordable = false;
+              const label = key === 'politicalCapital' ? 'political capital'
+                          : key === 'money' ? 'money'
+                          : key;
+              shortfallText = `Need ${amt} ${label} (have ${Math.round(have)})`;
+              break;
+            }
+          }
+        }
+
         btn.innerHTML = `
           <div class="cm-choice-label">${c.label}</div>
           <div class="cm-choice-desc">${c.desc}</div>
-          ${c.tag ? `<div class="cm-choice-tag">${c.tag}</div>` : ''}`;
-        btn.onclick = () => {
-          this._overlay.classList.remove('cm-visible');
-          onChoice(i, c);
-        };
+          ${c.tag ? `<div class="cm-choice-tag">${c.tag}</div>` : ''}
+          ${!affordable ? `<div class="cm-choice-insufficient">${shortfallText}</div>` : ''}`;
+
+        if (!affordable) {
+          btn.disabled = true;
+          btn.classList.add('cm-choice-disabled');
+        } else {
+          btn.onclick = () => {
+            this._overlay.classList.remove('cm-visible');
+            onChoice(i, c);
+          };
+        }
+
         grid.appendChild(btn);
       });
 
